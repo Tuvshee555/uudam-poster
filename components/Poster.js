@@ -40,7 +40,18 @@ export default function Poster({ trip: t, upd, addItem, removeItem, logoSrc, pag
           </div>
         </div>
 
-        <div className="hero">
+        <div
+          className="hero"
+          style={
+            t.hero_image
+              ? {
+                  backgroundImage: `linear-gradient(135deg, rgba(15,58,97,.86), rgba(29,93,149,.70)), url(${t.hero_image})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }
+              : undefined
+          }
+        >
           <Ed as="div" className="kicker" value={t.subtitle || t.agency} onChange={(v) => upd(["subtitle"], v)} />
           <Ed as="div" className="htitle" value={t.title} onChange={(v) => upd(["title"], v)} />
           <div className="htag"><b>✦</b> Аялал бүхэн давтагдашгүй</div>

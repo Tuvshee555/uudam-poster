@@ -10,6 +10,23 @@ function setPath(obj, path, value) {
   return clone;
 }
 
+// downscale + compress an uploaded photo so it stays small in the DB
+function resizeImage(file, maxW = 1500) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxW / img.width);
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
 export default function Home() {
   const [trip, setTrip] = useState(null);
   const [tripId, setTripId] = useState(null);
@@ -24,6 +41,7 @@ export default function Home() {
   const page2Ref = useRef(null);
   const previewRef = useRef(null);
   const mainRef = useRef(null);
+  const heroInputRef = useRef(null);
 
   // edit helpers
   const upd = (path, value) => setTrip((t) => setPath(t, path, value));
@@ -137,6 +155,59 @@ export default function Home() {
     }
   }
 
+  async function onHeroFile(file) {
+    if (!file) return;
+    setBusy("Зураг нэмж байна…");
+    try {
+      const dataUrl = await resizeImage(file);
+      upd(["hero_image"], dataUrl);
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setBusy("");
+      if (heroInputRef.current) heroInputRef.current.value = "";
+    }
+  }
+
+  // combine both pages into ONE tall image (one file to send on Messenger)
+  async function downloadOneImage() {
+    setBusy("Нэг зураг бэлдэж байна…");
+    try {
+      const nodes = [page1Ref.current, page2Ref.current].filter(Boolean);
+      const urls = [];
+      for (const n of nodes) urls.push(await capture(n));
+      const imgs = await Promise.all(
+        urls.map((u) => new Promise((res, rej) => {
+          const i = new Image();
+          i.onload = () => res(i);
+          i.onerror = rej;
+          i.src = u;
+        }))
+      );
+      const W = Math.max(...imgs.map((i) => i.width));
+      const H = imgs.reduce((s, i) => s + i.height, 0);
+      const c = document.createElement("canvas");
+      c.width = W;
+      c.height = H;
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, W, H);
+      let y = 0;
+      for (const i of imgs) {
+        ctx.drawImage(i, 0, y);
+        y += i.height;
+      }
+      const a = document.createElement("a");
+      a.href = c.toDataURL("image/png");
+      a.download = `${(trip.title || "poster").slice(0, 30)}-full.png`;
+      a.click();
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function save() {
     setBusy("Хадгалж байна…");
     try {
@@ -216,10 +287,24 @@ export default function Home() {
             <>
               <div className="toolbar">
                 <button className="btn" onClick={save} disabled={!!busy}>💾 Хадгалах</button>
-                <button className="btn ghost" onClick={downloadPng} disabled={!!busy}>🖼 PNG татах</button>
-                <button className="btn ghost" onClick={downloadPdf} disabled={!!busy}>📑 PDF татах</button>
+                <button className="btn ghost" onClick={() => heroInputRef.current && heroInputRef.current.click()} disabled={!!busy}>
+                  📷 {trip.hero_image ? "Зураг солих" : "Нүүр зураг нэмэх"}
+                </button>
+                {trip.hero_image && (
+                  <button className="btn ghost" onClick={() => upd(["hero_image"], null)} disabled={!!busy}>✕ Зураг авах</button>
+                )}
+                <button className="btn ghost" onClick={downloadPng} disabled={!!busy}>🖼 PNG (2 хуудас)</button>
+                <button className="btn ghost" onClick={downloadOneImage} disabled={!!busy}>🧩 Нэг зураг (бүгд)</button>
+                <button className="btn ghost" onClick={downloadPdf} disabled={!!busy}>📑 PDF</button>
+                <input
+                  ref={heroInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => onHeroFile(e.target.files[0])}
+                />
                 <span className="note" style={{ alignSelf: "center" }}>
-                  Постер дээрх бичвэр дээр дарж засаарай. Хоолны таглыг дарж асаах/унтраах.
+                  Бичвэр дээр дарж засаарай · хоолны таглыг дарж асаах/унтраах
                 </span>
               </div>
 

@@ -162,7 +162,7 @@ function buildHTML(t) {
       <div class="dur">${t.duration_days} ӨДӨР<small>${t.duration_nights} шөнө</small></div>
     </div>
 
-    <div class="hero">
+    <div class="hero"${t.hero_image ? ` style="background-image:linear-gradient(135deg,rgba(15,58,97,.86),rgba(29,93,149,.70)),url(${t.hero_image});background-size:cover;background-position:center"` : ""}>
       <div class="kicker">${t.subtitle || t.agency}</div>
       <div class="htitle">${t.title}</div>
       <div class="htag"><b>✦</b> Аялал бүхэн давтагдашгүй</div>
