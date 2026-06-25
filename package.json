@@ -1,0 +1,24 @@
+{
+  "name": "uudam-poster-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "render": "node render.js"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "html-to-image": "^1.11.13",
+    "jspdf": "^2.5.2",
+    "mammoth": "^1.8.0",
+    "next": "14.2.15",
+    "pdf-parse": "^1.1.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "pdf-lib": "^1.17.1",
+    "pg": "^8.22.0",
+    "puppeteer-core": "^23.11.1"
+  }
+}

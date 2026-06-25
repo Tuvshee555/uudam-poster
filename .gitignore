@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+.env*.local
+.next/
+out/
+dist/
+*.log
+poster-p*.png
+poster.pdf
+preview.html
+tests/datong-raw.txt
+tests/_extract.json
+.claude/
+.DS_Store

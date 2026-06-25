@@ -1,0 +1,113 @@
+{
+  "title": "БЭЙДАХЭ АЯЛАЛ",
+  "subtitle": "ШАР ТЭНГИСИЙН АЯЛАЛ",
+  "duration_days": 8,
+  "duration_nights": 7,
+  "departure_rule": "Долоо хоног бүрийн Баасан гаригт Улаанбаатараас хөдөлнө",
+  "departures": [
+    { "date": "5-р сарын 29" },
+    { "date": "6-р сарын 5" },
+    { "date": "6-р сарын 12" },
+    { "date": "6-р сарын 19" },
+    { "date": "6-р сарын 26" },
+    { "date": "7-р сарын 3" },
+    { "date": "7-р сарын 17" },
+    { "date": "7-р сарын 24" }
+  ],
+  "prices": [
+    { "applies_to": "6-р сар", "adult": 1550, "child": 1300, "child_years": "2016-2023", "currency": "¥" },
+    { "applies_to": "7-р сарын 3", "adult": 1750, "child": 1450, "child_years": "2016-2023", "currency": "¥" },
+    { "applies_to": "7-р сарын 17, 24", "adult": 1850, "child": 1550, "child_years": "2016-2023", "currency": "¥" }
+  ],
+  "child_free_note": "2024-2026 он хүүхэд үнэгүй",
+  "days": [
+    {
+      "day": 1,
+      "route": "УБ → Замын-Үүд → Эрээн → Жинин",
+      "distance_km": 350,
+      "activities": [
+        "Эрээн хотод аялагчдыг тосон авна",
+        "Жинин хот руу замд гарна",
+        "Water World халуун рашаан амралт",
+        "Амралт (нийтийн заал)"
+      ],
+      "meals": { "breakfast": false, "lunch": false, "dinner": true },
+      "hotel": "Жинин — усан амралтын цогцолбор (нийтийн заал; өрөө авах бол 198¥)",
+      "private_room_price": "198¥"
+    },
+    {
+      "day": 2,
+      "route": "Жинин → Бэйдахэ",
+      "distance_km": 600,
+      "activities": [
+        "Бэйдахэ чиглэлд автобусаар явна",
+        "Далайн эргийн хажууд буудалд байрлах"
+      ],
+      "meals": { "breakfast": true, "lunch": false, "dinner": true },
+      "hotel": "Бэйдахэ — далайн эргийн буудал"
+    },
+    {
+      "day": 3,
+      "route": "Бэйдахэ",
+      "distance_km": 0,
+      "activities": [
+        "Загасан арал (Юудо усан парк)",
+        "Усан онгоцны аялал"
+      ],
+      "meals": { "breakfast": true, "lunch": false, "dinner": true },
+      "hotel": "Бэйдахэ — буудалд амрах"
+    },
+    {
+      "day": 4,
+      "route": "Бэйдахэ → Жанжакоу",
+      "distance_km": 450,
+      "activities": [
+        "Сувдны дэл гүүр үзэх",
+        "Усан амралтын цогцолбор"
+      ],
+      "meals": { "breakfast": true, "lunch": false, "dinner": true },
+      "hotel": "Жанжакоу — буудал"
+    },
+    {
+      "day": 5,
+      "route": "Жанжакоу → Эрээн",
+      "distance_km": 450,
+      "activities": [
+        "Эрээн хот руу буцна",
+        "Амралт"
+      ],
+      "meals": { "breakfast": true, "lunch": false, "dinner": true },
+      "hotel": "Эрээн — буудал"
+    },
+    {
+      "day": 6,
+      "route": "Эрээн → Замын-Үүд → УБ",
+      "distance_km": 0,
+      "activities": [
+        "Чөлөөт цаг",
+        "13:00 цагт Замын-Үүд хил гарна"
+      ],
+      "meals": { "breakfast": true, "lunch": false, "dinner": false },
+      "hotel": null
+    }
+  ],
+  "includes": [
+    "Тээврийн зардал",
+    "Зочид буудал",
+    "Аяллын даатгал",
+    "Хөтөч",
+    "Хөтөлбөрт багтсан үзвэр",
+    "Хөтөлбөрт багтсан хоол"
+  ],
+  "excludes": [
+    "Хувийн хэрэглээний зардал",
+    "Хөтөлбөрт багтаагүй хоол",
+    "Хөтөлбөрт багтаагүй үзвэр"
+  ],
+  "contacts": {
+    "phones": ["7713 6633", "8913 6633", "9117 2769", "9924 8000"],
+    "email": "uudamtravel6@gmail.com",
+    "address": "Чингэлтэй дүүрэг, 4-р хороо, Анхарагийн гудамж-23, \"Todtower\" офис, 701 тоот"
+  },
+  "agency": "UUDAM TRAVEL AGENCY"
+}

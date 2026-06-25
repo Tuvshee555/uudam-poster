@@ -1,0 +1,94 @@
+:root{
+  --navy:#113e67; --navy-soft:#1c4f80; --ink:#16202c; --muted:#6b7785;
+  --line:#e6eaf0; --tint:#f4f7fb; --good:#1f9d63;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Segoe UI","Noto Sans",Arial,sans-serif;color:var(--ink);background:#eef1f6}
+
+/* ---------- app shell ---------- */
+.appbar{display:flex;align-items:center;gap:12px;padding:14px 22px;background:var(--navy);color:#fff}
+.appbar img{width:38px;height:38px;border-radius:9px}
+.appbar h1{font-size:17px;font-weight:800;letter-spacing:1px}
+.appbar .sub{font-size:12px;color:#bcd2e8;margin-left:auto}
+.layout{display:grid;grid-template-columns:1fr 280px;gap:18px;padding:18px;align-items:start}
+.main{min-width:0}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+
+.drop{border:2px dashed #b9c6d8;border-radius:14px;padding:34px;text-align:center;
+  background:#fff;color:var(--muted);cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--navy);background:#f7faff;color:var(--navy)}
+.drop b{color:var(--navy)}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.btn{border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:700;
+  font-size:14px;padding:9px 16px;border-radius:9px;cursor:pointer}
+.btn.ghost{background:#fff;color:var(--navy)}
+.btn:disabled{opacity:.5;cursor:default}
+.note{font-size:13px;color:var(--muted)}
+.err{color:#c0392b;font-size:14px;margin-top:8px}
+
+.sidebar h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px}
+.hist{display:flex;flex-direction:column;gap:6px}
+.hist button{text-align:left;border:1px solid var(--line);background:#fff;border-radius:9px;
+  padding:9px 11px;cursor:pointer;font-size:13px}
+.hist button:hover{border-color:var(--navy)}
+.hist .t{font-weight:700;color:var(--navy)}
+.hist .d{color:var(--muted);font-size:11px}
+
+/* ---------- poster stage (scaled for screen, exported full-res) ---------- */
+.stagewrap{margin-top:14px;display:flex;flex-direction:column;gap:18px;align-items:center}
+.stage{transform-origin:top center}
+
+/* ---------- the poster itself (mirrors template.js) ---------- */
+.page{width:1080px;background:#fff;padding:64px 64px 0;box-shadow:0 4px 22px rgba(20,30,60,.12);margin-bottom:24px}
+.page .head{display:flex;align-items:center;gap:18px;padding-bottom:26px;border-bottom:2px solid var(--navy)}
+.page .logo{width:74px;height:74px;border-radius:16px;object-fit:cover}
+.page .name{font-size:20px;font-weight:800;letter-spacing:3px;color:var(--navy)}
+.page .name small{display:block;font-size:11px;letter-spacing:4px;color:var(--muted);font-weight:600;margin-top:2px}
+.page .spacer{flex:1}
+.page .dur{text-align:right;color:var(--navy);font-weight:800;font-size:18px}
+.page .dur small{display:block;color:var(--muted);font-weight:600;font-size:13px}
+.page .title{margin:34px 0 8px;font-size:46px;line-height:1.05;font-weight:900;color:var(--navy);letter-spacing:-.5px}
+.page .subtitle{font-size:20px;color:var(--muted);font-weight:600;margin-bottom:24px}
+.page .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px}
+.page .chip{border:1.5px solid var(--line);background:var(--tint);color:var(--navy);font-weight:600;font-size:15px;padding:8px 15px;border-radius:30px}
+.page .sec{margin-top:34px}
+.page .sec h3{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--navy);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.page .sec h3:before{content:"";width:22px;height:3px;background:var(--navy);border-radius:2px}
+.page .ptable{width:100%;border-collapse:collapse;margin-top:4px}
+.page .ptable th{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;padding:10px;border-bottom:2px solid var(--line)}
+.page .ptable td{padding:14px 10px;border-bottom:1px solid var(--line);font-size:16px}
+.page .pwhen{font-weight:700;color:var(--navy)}
+.page .pamt{font-weight:800;color:var(--ink)}
+.page .pnote{margin-top:12px;color:var(--muted);font-size:14px;font-style:italic}
+.page .two{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+.page .two ul{list-style:none}
+.page .two li{padding:8px 0 8px 26px;position:relative;font-size:16px}
+.page .inc li:before{content:"✓";position:absolute;left:0;color:var(--good);font-weight:800}
+.page .exc li:before{content:"✕";position:absolute;left:0;color:#c2c9d4;font-weight:800}
+.page .foot{margin:40px -64px 0;padding:22px 64px;background:var(--navy);color:#fff;display:flex;gap:26px;flex-wrap:wrap;font-size:15px}
+.page .foot b{color:#cfe0f1;font-weight:600}
+.page .ititle{margin:30px 0 8px;font-size:30px;font-weight:900;color:var(--navy)}
+.page .dayrow{display:flex;gap:18px;padding:22px 0;border-bottom:1px solid var(--line)}
+.page .dnum{flex:none;width:42px;height:42px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center}
+.page .dmain{flex:1;min-width:0}
+.page .droute{font-size:19px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.page .droute .km{color:var(--muted);font-weight:600;font-size:14px;margin-left:4px}
+.page .droute .flt{color:var(--navy-soft);font-weight:600;font-size:14px;margin-left:6px}
+.page .dacts{list-style:none}
+.page .dacts li{position:relative;padding:3px 0 3px 16px;font-size:16px}
+.page .dacts li:before{content:"•";position:absolute;left:0;color:var(--navy-soft)}
+.page .bonus{margin-top:6px;color:#9a6b00;background:#fff7e6;display:inline-block;padding:5px 11px;border-radius:7px;font-size:14px}
+.page .dhotel{margin-top:8px;color:var(--muted);font-size:14px}
+.page .dmeals{flex:none;width:128px;display:flex;align-items:flex-start;justify-content:flex-end}
+.page .pills{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.page .pill{font-size:13px;font-weight:700;padding:5px 11px;border-radius:20px;white-space:nowrap;cursor:pointer;user-select:none}
+.page .pill.yes{background:#e7f6ee;color:#1f9d63;border:1px solid #bfe6d0}
+.page .pill.no{background:#fdecec;color:#d64545;border:1px solid #f3c9c9}
+.page .endpad{height:56px}
+
+/* editable affordance (only visible on screen, never in export) */
+.page [contenteditable]{outline:none;border-radius:4px;transition:box-shadow .1s}
+.page [contenteditable]:hover{box-shadow:0 0 0 2px #cfe0f1 inset}
+.page [contenteditable]:focus{box-shadow:0 0 0 2px var(--navy) inset;background:#fff}
+.addbtn{font-size:12px;color:var(--navy-soft);cursor:pointer;border:1px dashed #b9c6d8;border-radius:6px;padding:2px 8px;display:inline-block;margin-top:6px}
