@@ -151,6 +151,11 @@ function buildHTML(t) {
   .pill.yes{background:#e7f6ee;color:#1f9d63;border:1px solid #bfe6d0}
   .pill.no{background:#fdecec;color:#d64545;border:1px solid #f3c9c9}
   .endpad{height:56px}
+  .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px}
+  .gphoto{aspect-ratio:4/3;border-radius:12px;overflow:hidden;background:#eef1f6}
+  .gphoto img{width:100%;height:100%;object-fit:cover;display:block}
+  .gtag{text-align:center;color:${MUTED};font-style:italic;margin-top:28px;font-size:17px}
+  .gtag b{color:#e7b23f;font-style:normal}
   </style></head><body>
 
   <!-- PAGE 1 -->
@@ -202,6 +207,20 @@ function buildHTML(t) {
     <div class="days">${days}</div>
     <div class="endpad"></div>
   </div>
+
+  ${t.gallery && t.gallery.length ? `
+  <div class="page" id="p3">
+    <div class="head">
+      ${logo}
+      <div class="name">UUDAM<small>TRAVEL AGENCY</small></div>
+      <div class="spacer"></div>
+      <div class="dur">ЗУРГУУД<small>${t.gallery.length} фото</small></div>
+    </div>
+    <div class="ititle">Аяллын зургуудаас</div>
+    <div class="gallery">${t.gallery.map((s) => `<div class="gphoto"><img src="${s}"></div>`).join("")}</div>
+    <div class="gtag"><b>✦</b> Аялал бүхэн давтагдашгүй</div>
+    <div class="endpad"></div>
+  </div>` : ""}
 
   </body></html>`;
 }

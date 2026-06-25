@@ -39,9 +39,11 @@ export default function Home() {
 
   const page1Ref = useRef(null);
   const page2Ref = useRef(null);
+  const page3Ref = useRef(null);
   const previewRef = useRef(null);
   const mainRef = useRef(null);
   const heroInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
   // edit helpers
   const upd = (path, value) => setTrip((t) => setPath(t, path, value));
@@ -118,7 +120,7 @@ export default function Home() {
   async function downloadPng() {
     setBusy("Зураг бэлдэж байна…");
     try {
-      const nodes = [page1Ref.current, page2Ref.current].filter(Boolean);
+      const nodes = [page1Ref.current, page2Ref.current, page3Ref.current].filter(Boolean);
       for (let i = 0; i < nodes.length; i++) {
         const url = await capture(nodes[i]);
         const a = document.createElement("a");
@@ -137,7 +139,7 @@ export default function Home() {
     setBusy("PDF бэлдэж байна…");
     try {
       const { jsPDF } = await import("jspdf");
-      const nodes = [page1Ref.current, page2Ref.current].filter(Boolean);
+      const nodes = [page1Ref.current, page2Ref.current, page3Ref.current].filter(Boolean);
       let pdf;
       for (let i = 0; i < nodes.length; i++) {
         const url = await capture(nodes[i]);
@@ -169,11 +171,31 @@ export default function Home() {
     }
   }
 
-  // combine both pages into ONE tall image (one file to send on Messenger)
+  async function onGalleryFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+    setBusy("Зураг нэмж байна…");
+    try {
+      const added = [];
+      for (const f of files) added.push(await resizeImage(f, 1200));
+      setTrip((t) => {
+        const c = structuredClone(t);
+        c.gallery = [...(c.gallery || []), ...added];
+        return c;
+      });
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setBusy("");
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
+    }
+  }
+
+  // combine all pages into ONE tall image (one file to send on Messenger)
   async function downloadOneImage() {
     setBusy("Нэг зураг бэлдэж байна…");
     try {
-      const nodes = [page1Ref.current, page2Ref.current].filter(Boolean);
+      const nodes = [page1Ref.current, page2Ref.current, page3Ref.current].filter(Boolean);
       const urls = [];
       for (const n of nodes) urls.push(await capture(n));
       const imgs = await Promise.all(
@@ -293,7 +315,10 @@ export default function Home() {
                 {trip.hero_image && (
                   <button className="btn ghost" onClick={() => upd(["hero_image"], null)} disabled={!!busy}>✕ Зураг авах</button>
                 )}
-                <button className="btn ghost" onClick={downloadPng} disabled={!!busy}>🖼 PNG (2 хуудас)</button>
+                <button className="btn ghost" onClick={() => galleryInputRef.current && galleryInputRef.current.click()} disabled={!!busy}>
+                  🌄 Галерей зураг{trip.gallery && trip.gallery.length ? ` (${trip.gallery.length})` : ""}
+                </button>
+                <button className="btn ghost" onClick={downloadPng} disabled={!!busy}>🖼 PNG (хуудсаар)</button>
                 <button className="btn ghost" onClick={downloadOneImage} disabled={!!busy}>🧩 Нэг зураг (бүгд)</button>
                 <button className="btn ghost" onClick={downloadPdf} disabled={!!busy}>📑 PDF</button>
                 <input
@@ -302,6 +327,14 @@ export default function Home() {
                   accept="image/*"
                   style={{ display: "none" }}
                   onChange={(e) => onHeroFile(e.target.files[0])}
+                />
+                <input
+                  ref={galleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: "none" }}
+                  onChange={(e) => onGalleryFiles(e.target.files)}
                 />
                 <span className="note" style={{ alignSelf: "center" }}>
                   Бичвэр дээр дарж засаарай · хоолны таглыг дарж асаах/унтраах
@@ -321,6 +354,7 @@ export default function Home() {
                     logoSrc="/uudam-logo.jpg"
                     page1Ref={page1Ref}
                     page2Ref={page2Ref}
+                    page3Ref={page3Ref}
                   />
                 </div>
               </div>

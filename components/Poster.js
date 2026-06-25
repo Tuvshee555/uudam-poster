@@ -18,7 +18,7 @@ function Ed({ value = "", onChange, as = "span", className }) {
   );
 }
 
-export default function Poster({ trip: t, upd, addItem, removeItem, logoSrc, page1Ref, page2Ref }) {
+export default function Poster({ trip: t, upd, addItem, removeItem, logoSrc, page1Ref, page2Ref, page3Ref }) {
   const Logo = () => (
     <>
       <img className="logo" src={logoSrc} alt="UUDAM" />
@@ -186,6 +186,28 @@ export default function Poster({ trip: t, upd, addItem, removeItem, logoSrc, pag
         </div>
         <div className="endpad" />
       </div>
+
+      {/* ===== PAGE 3 : GALLERY (only if photos added) ===== */}
+      {t.gallery && t.gallery.length > 0 && (
+        <div className="page" id="p3" ref={page3Ref}>
+          <div className="head">
+            <Logo />
+            <div className="spacer" />
+            <div className="dur">ЗУРГУУД<small>{t.gallery.length} фото</small></div>
+          </div>
+          <div className="ititle">Аяллын зургуудаас</div>
+          <div className="gallery">
+            {t.gallery.map((src, i) => (
+              <div className="gphoto" key={i} onClick={() => removeItem(["gallery"], i)} title="Дарж устгах">
+                <img src={src} alt="" />
+                <span className="grm">✕</span>
+              </div>
+            ))}
+          </div>
+          <div className="gtag"><b>✦</b> Аялал бүхэн давтагдашгүй</div>
+          <div className="endpad" />
+        </div>
+      )}
     </>
   );
 }
