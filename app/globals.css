@@ -14,10 +14,19 @@ body{font-family:"Segoe UI","Noto Sans",Arial,sans-serif;color:var(--ink);backgr
 .main{min-width:0}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
 
-.drop{border:2px dashed #b9c6d8;border-radius:14px;padding:34px;text-align:center;
-  background:#fff;color:var(--muted);cursor:pointer;transition:.15s}
-.drop:hover,.drop.over{border-color:var(--navy);background:#f7faff;color:var(--navy)}
-.drop b{color:var(--navy)}
+.uploader{max-width:780px;margin:40px auto 0;text-align:center}
+.uploader .lead{font-size:24px;font-weight:900;color:var(--navy);letter-spacing:-.3px}
+.uploader .lead small{display:block;font-size:15px;font-weight:500;color:var(--muted);margin-top:8px}
+.drop{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:22px;
+  border:2px dashed #b9c6d8;border-radius:18px;padding:48px 30px;background:#fff;
+  color:var(--muted);cursor:pointer;transition:.18s}
+.drop:hover,.drop.over{border-color:var(--navy);
+  background:linear-gradient(180deg,#f7faff,#eaf2fb);color:var(--navy);
+  transform:translateY(-1px);box-shadow:0 14px 34px rgba(17,62,103,.12)}
+.drop .ic{width:60px;height:60px;border-radius:50%;background:var(--navy);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:27px;box-shadow:0 8px 18px rgba(17,62,103,.25)}
+.drop .dt{font-size:18px;font-weight:800;color:var(--navy)}
+.drop .ds{font-size:13px;color:var(--muted)}
 
 .toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
 .btn{border:1px solid var(--navy);background:var(--navy);color:#fff;font-weight:700;
@@ -50,7 +59,20 @@ body{font-family:"Segoe UI","Noto Sans",Arial,sans-serif;color:var(--ink);backgr
 .page .dur small{display:block;color:var(--muted);font-weight:600;font-size:13px}
 .page .title{margin:34px 0 8px;font-size:46px;line-height:1.05;font-weight:900;color:var(--navy);letter-spacing:-.5px}
 .page .subtitle{font-size:20px;color:var(--muted);font-weight:600;margin-bottom:24px}
-.page .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px}
+.page .chips{display:flex;flex-wrap:wrap;gap:8px;margin:30px 0}
+/* cinematic hero */
+.page .hero{margin:26px -64px 0;padding:50px 64px;color:#fff;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,#0f3a61 0%,#1d5d95 100%)}
+.page .hero:after{content:"✈";position:absolute;right:34px;top:48%;transform:translateY(-50%) rotate(-20deg);font-size:170px;opacity:.07;line-height:1}
+.page .hero .kicker{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#e7b23f;font-weight:800;margin-bottom:12px}
+.page .hero .htitle{font-size:54px;line-height:1.02;font-weight:900;letter-spacing:-.6px;position:relative}
+.page .hero .htag{margin-top:16px;font-size:17px;color:#cfe0f1;font-style:italic;position:relative}
+.page .hero .htag b{color:#e7b23f;font-style:normal;margin-right:6px}
+/* day timeline */
+.page .days{position:relative}
+.page .days:before{content:"";position:absolute;left:20px;top:18px;bottom:70px;width:2px;
+  background:linear-gradient(#113e67,#cdd8e6)}
+.page .dnum{box-shadow:0 0 0 4px #fff,0 0 0 6px #dfeaf4;z-index:1;position:relative}
 .page .chip{border:1.5px solid var(--line);background:var(--tint);color:var(--navy);font-weight:600;font-size:15px;padding:8px 15px;border-radius:30px}
 .page .sec{margin-top:34px}
 .page .sec h3{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--navy);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:10px}

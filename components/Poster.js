@@ -40,8 +40,11 @@ export default function Poster({ trip: t, upd, addItem, removeItem, logoSrc, pag
           </div>
         </div>
 
-        <Ed as="div" className="title" value={t.title} onChange={(v) => upd(["title"], v)} />
-        <Ed as="div" className="subtitle" value={t.subtitle || ""} onChange={(v) => upd(["subtitle"], v)} />
+        <div className="hero">
+          <Ed as="div" className="kicker" value={t.subtitle || t.agency} onChange={(v) => upd(["subtitle"], v)} />
+          <Ed as="div" className="htitle" value={t.title} onChange={(v) => upd(["title"], v)} />
+          <div className="htag"><b>✦</b> Аялал бүхэн давтагдашгүй</div>
+        </div>
 
         <div className="chips">
           {t.flights && (
@@ -130,7 +133,7 @@ export default function Poster({ trip: t, upd, addItem, removeItem, logoSrc, pag
           <div className="dur">ХӨТӨЛБӨР<small>{t.duration_days} өдөр</small></div>
         </div>
         <div className="ititle">{t.title}</div>
-
+        <div className="days">
         {(t.days || []).map((d, i) => (
           <div className="dayrow" key={i}>
             <div className="dnum">{d.day}</div>
@@ -169,6 +172,7 @@ export default function Poster({ trip: t, upd, addItem, removeItem, logoSrc, pag
             </div>
           </div>
         ))}
+        </div>
         <div className="endpad" />
       </div>
     </>

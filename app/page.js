@@ -180,7 +180,11 @@ export default function Home() {
 
       <div className="layout">
         <div className="main" ref={mainRef}>
-          <div className="card">
+          <div className="uploader">
+            <div className="lead">
+              Хятадаас ирсэн файлаа оруулаад, брэнд постер бэлэн.
+              <small>AI уншиж, аяллын постерийг ~10 секундэд үүсгэнэ.</small>
+            </div>
             <label
               className="drop"
               onDragOver={(e) => {
@@ -200,11 +204,12 @@ export default function Home() {
                 style={{ display: "none" }}
                 onChange={(e) => handleFile(e.target.files[0])}
               />
-              📄 <b>Хятадаас ирсэн файлыг энд чирж тавь</b> эсвэл дарж сонго
-              <div className="note" style={{ marginTop: 6 }}>Word (.docx), PDF, эсвэл .txt</div>
+              <div className="ic">⬆</div>
+              <div className="dt">Файлаа энд чирж тавь</div>
+              <div className="ds">эсвэл дарж сонгоно уу · Word (.docx), PDF, .txt</div>
             </label>
-            {busy && <div className="note" style={{ marginTop: 10 }}>⏳ {busy}</div>}
-            {error && <div className="err">⚠ {error}</div>}
+            {busy && <div className="note" style={{ marginTop: 14, textAlign: "center" }}>⏳ {busy}</div>}
+            {error && <div className="err" style={{ textAlign: "center" }}>⚠ {error}</div>}
           </div>
 
           {trip && (

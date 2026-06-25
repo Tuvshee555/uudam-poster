@@ -94,7 +94,16 @@ function buildHTML(t) {
   .title{margin:34px 0 8px;font-size:46px;line-height:1.05;font-weight:900;color:${NAVY};letter-spacing:-.5px}
   .subtitle{font-size:20px;color:${MUTED};font-weight:600;margin-bottom:24px}
   /* chips */
-  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:30px 0}
+  .hero{margin:26px -64px 0;padding:50px 64px;color:#fff;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#0f3a61 0%,#1d5d95 100%)}
+  .hero:after{content:"✈";position:absolute;right:34px;top:48%;transform:translateY(-50%) rotate(-20deg);font-size:170px;opacity:.07;line-height:1}
+  .hero .kicker{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#e7b23f;font-weight:800;margin-bottom:12px}
+  .hero .htitle{font-size:54px;line-height:1.02;font-weight:900;letter-spacing:-.6px;position:relative}
+  .hero .htag{margin-top:16px;font-size:17px;color:#cfe0f1;font-style:italic;position:relative}
+  .hero .htag b{color:#e7b23f;font-style:normal;margin-right:6px}
+  .days{position:relative}
+  .days:before{content:"";position:absolute;left:20px;top:18px;bottom:70px;width:2px;background:linear-gradient(#113e67,#cdd8e6)}
   .chip{border:1.5px solid ${LINE};background:${TINT};color:${NAVY};font-weight:600;
     font-size:15px;padding:8px 15px;border-radius:30px}
   /* section */
@@ -124,7 +133,8 @@ function buildHTML(t) {
   .ititle{margin:30px 0 8px;font-size:30px;font-weight:900;color:${NAVY}}
   .dayrow{display:flex;gap:18px;padding:22px 0;border-bottom:1px solid ${LINE}}
   .dnum{flex:none;width:42px;height:42px;border-radius:50%;background:${NAVY};color:#fff;
-    font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center}
+    font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 4px #fff,0 0 0 6px #dfeaf4;position:relative;z-index:1}
   .dmain{flex:1}
   .droute{font-size:19px;font-weight:800;color:${NAVY};margin-bottom:8px}
   .droute .km{color:${MUTED};font-weight:600;font-size:14px;margin-left:4px}
@@ -152,8 +162,11 @@ function buildHTML(t) {
       <div class="dur">${t.duration_days} ӨДӨР<small>${t.duration_nights} шөнө</small></div>
     </div>
 
-    <div class="title">${t.title}</div>
-    <div class="subtitle">${t.subtitle || ""}</div>
+    <div class="hero">
+      <div class="kicker">${t.subtitle || t.agency}</div>
+      <div class="htitle">${t.title}</div>
+      <div class="htag"><b>✦</b> Аялал бүхэн давтагдашгүй</div>
+    </div>
 
     <div class="chips">${flights}${deps}</div>
 
@@ -186,7 +199,7 @@ function buildHTML(t) {
       <div class="dur">ХӨТӨЛБӨР<small>${t.duration_days} өдөр</small></div>
     </div>
     <div class="ititle">${t.title}</div>
-    ${days}
+    <div class="days">${days}</div>
     <div class="endpad"></div>
   </div>
 
