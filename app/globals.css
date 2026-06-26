@@ -104,8 +104,16 @@ button,input,textarea{font:inherit}
 /* Day timeline */
 .page .days{position:relative;padding-left:2px}
 .page .days:before{content:"";position:absolute;left:22px;top:24px;bottom:60px;width:1px;background:var(--line)}
-.page .dayrow{display:grid;grid-template-columns:46px 1fr;gap:18px;padding:10px 0}
+.page .dayrow{display:grid;grid-template-columns:46px 1fr;gap:18px;padding:10px 0;transition:opacity .15s}
+.page .dayrow[draggable]{cursor:grab}
+.page .dayrow[draggable]:active{cursor:grabbing}
+.page .dayrow.drag-over{opacity:.5;outline:2px dashed var(--gold);border-radius:12px}
 .page .dnum{width:44px;height:44px;border-radius:50%;background:var(--navy);color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
+.page .drag-handle{font-size:22px;font-weight:400;letter-spacing:0;cursor:grab;user-select:none;background:var(--navy);opacity:.85}
+.page .drag-handle:hover{opacity:1}
+.export-only{display:none}
+body.exporting .export-only{display:flex}
+body.exporting .drag-handle{display:none}
 
 /* Day card */
 .page .daycard{border:1px solid var(--line);border-radius:12px;padding:20px 24px;background:#fff;border-left:3px solid var(--gold)}

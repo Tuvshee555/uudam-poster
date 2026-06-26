@@ -133,6 +133,16 @@ export default function Home() {
       return normalizeTripData(clone);
     });
 
+  const reorderDay = (fromIdx, toIdx) =>
+    setTrip((t) => {
+      const clone = structuredClone(t);
+      const days = clone.days || [];
+      const [moved] = days.splice(fromIdx, 1);
+      days.splice(toIdx, 0, moved);
+      clone.days = days;
+      return normalizeTripData(clone);
+    });
+
   const removeLastDay = () =>
     setTrip((t) => {
       const clone = structuredClone(t);
@@ -526,6 +536,7 @@ export default function Home() {
                     addItem={addItem}
                     removeItem={removeItem}
                     insertDay={insertDay}
+                    reorderDay={reorderDay}
                     logoSrc="/uudam-logo.jpg"
                     page1Ref={page1Ref}
                     onDayPhotoFile={onDayPhotoFile}

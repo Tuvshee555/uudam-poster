@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef, useState } from "react";
+
 function Ed({ value = "", onChange, as = "span", className, placeholder }) {
   const Tag = as;
   return (
@@ -98,12 +100,15 @@ export default function Poster({
   addItem,
   removeItem,
   insertDay,
+  reorderDay,
   logoSrc,
   page1Ref,
   onDayPhotoFile,
   dayPhotoInputRefs,
 }) {
   const priceTable = getPriceTable(t);
+  const dragIdx = useRef(null);
+  const [dragOver, setDragOver] = useState(null);
 
   const Logo = () => (
     <>
@@ -196,8 +201,22 @@ export default function Poster({
             const narrative = buildNarrative(d);
 
             return (
-              <div className={"dayrow" + (d.photo ? " has-photo" : "")} key={i}>
-                <div className="dnum">{d.day}</div>
+              <div
+                className={"dayrow" + (d.photo ? " has-photo" : "") + (dragOver === i ? " drag-over" : "")}
+                key={i}
+                draggable
+                onDragStart={() => { dragIdx.current = i; }}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(i); }}
+                onDragLeave={() => setDragOver(null)}
+                onDrop={() => {
+                  setDragOver(null);
+                  if (dragIdx.current !== null && dragIdx.current !== i) reorderDay(dragIdx.current, i);
+                  dragIdx.current = null;
+                }}
+                onDragEnd={() => { setDragOver(null); dragIdx.current = null; }}
+              >
+                <div className="dnum editor-only drag-handle" title="Чирж байрлал солих">⠿</div>
+                <div className="dnum export-only">{d.day}</div>
 
                 <div className="daycard">
                   <div className="droute">
