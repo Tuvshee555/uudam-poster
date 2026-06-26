@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { fileToText } from "../../../lib/parse";
-import { extractTrip } from "../../../lib/gemini";
+import { extractTrip } from "../../../lib/openai";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;

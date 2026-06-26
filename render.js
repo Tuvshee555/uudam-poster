@@ -1,4 +1,4 @@
-// render.js  —  trip JSON -> poster PNG(s) + combined PDF
+// render.js  —  trip JSON -> one poster PNG + PDF
 // Usage: node render.js datong-trip.json
 const fs = require("fs");
 const puppeteer = require("puppeteer-core");
@@ -35,7 +35,7 @@ async function main() {
   }
   await browser.close();
 
-  // combine the PNGs into one PDF (each poster page = one PDF page)
+  // Put each rendered poster element into the PDF. The app currently renders one continuous poster.
   const pdf = await PDFDocument.create();
   for (const buf of pngs) {
     const img = await pdf.embedPng(buf);
