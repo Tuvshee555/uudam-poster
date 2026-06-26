@@ -425,6 +425,12 @@ export default function Home() {
 
   return (
     <>
+      {busy && (
+        <div className="loading-bar-wrap">
+          <div className="loading-bar" />
+          <div className="loading-label">{busy}</div>
+        </div>
+      )}
       <div className="appbar">
         <img src="/uudam-logo.jpg" alt="" />
         <h1>UUDAM — Постер үүсгэгч</h1>

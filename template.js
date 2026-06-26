@@ -139,8 +139,8 @@ function buildHTML(t) {
     .head .name{font-size:18px;font-weight:900;letter-spacing:2px;color:${NAVY}}
     .head .name small{display:block;font-size:10px;letter-spacing:3px;color:${MUTED};font-weight:600;margin-top:3px}
     .head .spacer{flex:1}
-    .head .dur{text-align:right;color:${NAVY};font-weight:900;font-size:18px}
-    .head .dur small{display:block;color:${NAVY};font-weight:800;font-size:16px;margin-top:3px;letter-spacing:.5px}
+    .head .dur{text-align:right;display:flex;flex-direction:column;gap:4px}
+    .dur-item{color:${NAVY};font-weight:900;font-size:20px;display:flex;align-items:center;gap:6px;justify-content:flex-end}
     .hero{margin:28px 0 0;padding:40px 48px;color:#fff;border-radius:16px;background:${NAVY}}
     .hero .kicker{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:${GOLD};font-weight:800;margin-bottom:10px}
     .hero .htitle{font-size:50px;line-height:1.06;font-weight:900;letter-spacing:-1px;max-width:760px}
@@ -183,7 +183,10 @@ function buildHTML(t) {
         ${logo}
         <div class="name">UUDAM<small>TRAVEL AGENCY</small></div>
         <div class="spacer"></div>
-        <div class="dur">${t.duration_days} ӨДӨР<small>${t.duration_nights} шөнө</small></div>
+        <div class="dur">
+          <div class="dur-item"><span>☀️</span>${t.duration_days} өдөр</div>
+          <div class="dur-item"><span>🌙</span>${t.duration_nights} шөнө</div>
+        </div>
       </div>
 
       <div class="hero"${t.hero_image ? ` style="background-image:linear-gradient(135deg,rgba(15,58,97,.84),rgba(29,93,149,.66)),url(${t.hero_image});background-size:cover;background-position:center"` : ""}>

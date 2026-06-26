@@ -126,7 +126,8 @@ export default function Poster({
           <Logo />
           <div className="spacer" />
           <div className="dur">
-            {t.duration_days} ӨДӨР<small>{t.duration_nights} шөнө</small>
+            <div className="dur-item"><span className="dur-emoji">☀️</span>{t.duration_days} өдөр</div>
+            <div className="dur-item"><span className="dur-emoji">🌙</span>{t.duration_nights} шөнө</div>
           </div>
         </div>
 
@@ -215,8 +216,7 @@ export default function Poster({
                 }}
                 onDragEnd={() => { setDragOver(null); dragIdx.current = null; }}
               >
-                <div className="dnum editor-only drag-handle" title="Чирж байрлал солих">⠿</div>
-                <div className="dnum export-only">{d.day}</div>
+                <div className="dnum drag-handle" title="Чирж байрлал солих" data-day={d.day}>⠿</div>
 
                 <div className="daycard">
                   <div className="droute">
