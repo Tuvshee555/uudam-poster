@@ -180,6 +180,9 @@ button,input,textarea{font:inherit}
 .page th [contenteditable]::selection{background:#f2bd4a;color:#113e67}
 .page .dsummary.prose[contenteditable]:hover,
 .page .dsummary.prose[contenteditable]:focus{box-shadow:none;background:transparent}
+.page .hero [contenteditable]:hover{box-shadow:0 0 0 2px rgba(255,255,255,.3) inset}
+.page .hero [contenteditable]:focus{box-shadow:0 0 0 2px rgba(255,255,255,.5) inset;background:transparent}
+.page .hero [contenteditable]::selection{background:rgba(255,255,255,.35);color:#fff}
 .page [contenteditable][data-placeholder]:empty:before{content:attr(data-placeholder);color:#9aaaba;font-style:italic;font-weight:400}
 .page th [contenteditable][data-placeholder]:empty:before{color:rgba(255,255,255,.45)}
 
