@@ -78,6 +78,8 @@ button,input,textarea{font:inherit}
 .page .name{font-size:18px;font-weight:900;letter-spacing:2px;color:var(--navy)}
 .page .name small{display:block;font-size:10px;letter-spacing:3px;color:var(--muted);font-weight:600;margin-top:3px}
 .page .spacer{flex:1}
+.page .head-phone{display:flex;align-items:center;gap:6px;color:var(--navy);font-weight:800;font-size:15px;margin-right:20px;white-space:nowrap}
+.page .head-phone-ic{font-size:14px}
 .page .dur{text-align:right;display:flex;flex-direction:column;gap:4px}
 .page .dur-item{color:var(--navy);font-weight:900;font-size:20px;display:flex;align-items:center;gap:6px;justify-content:flex-end}
 .page .dur-item .dur-emoji{font-size:18px}

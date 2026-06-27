@@ -120,6 +120,7 @@ function buildHTML(t) {
     .head .name{font-size:18px;font-weight:900;letter-spacing:2px;color:${NAVY}}
     .head .name small{display:block;font-size:10px;letter-spacing:3px;color:${MUTED};font-weight:600;margin-top:3px}
     .head .spacer{flex:1}
+    .head .head-phone{display:flex;align-items:center;gap:6px;color:${NAVY};font-weight:800;font-size:15px;margin-right:20px;white-space:nowrap}
     .head .dur{text-align:right;display:flex;flex-direction:column;gap:4px}
     .dur-item{color:${NAVY};font-weight:900;font-size:20px;display:flex;align-items:center;gap:6px;justify-content:flex-end}
     .hero{margin:28px 0 0;padding:40px 48px;color:#fff;border-radius:16px;background:${NAVY}}
@@ -166,6 +167,7 @@ function buildHTML(t) {
         ${logo}
         <div class="name">UUDAM<small>TRAVEL AGENCY</small></div>
         <div class="spacer"></div>
+        <div class="head-phone"><span>📞</span> <span>${(t.contacts.phones || []).join(", ")}</span></div>
         <div class="dur">
           <div class="dur-item"><span>☀️</span>${t.duration_days} өдөр</div>
           <div class="dur-item"><span>🌙</span>${t.duration_nights} шөнө</div>
@@ -194,7 +196,7 @@ function buildHTML(t) {
       <div class="endpad"></div>
 
       <div class="foot">
-        <span>📞 <b>${t.contacts.phones.join(", ")}</b></span>
+        <span>📍 <b>${t.contacts.address}</b></span>
         <span>✉ <b>${t.contacts.email}</b></span>
       </div>
     </div>

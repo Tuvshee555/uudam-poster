@@ -95,6 +95,10 @@ export default function Poster({
         <div className="head">
           <Logo />
           <div className="spacer" />
+          <div className="head-phone">
+            <span className="head-phone-ic">📞</span>
+            <span className="head-phone-num">{(t.contacts?.phones || []).join(", ")}</span>
+          </div>
           <div className="dur">
             <div className="dur-item"><span className="dur-emoji">☀️</span>{t.duration_days} өдөр</div>
             <div className="dur-item"><span className="dur-emoji">🌙</span>{t.duration_nights} шөнө</div>
@@ -330,7 +334,7 @@ export default function Poster({
         <div className="endpad" />
 
         <div className="foot">
-          <span>📞 <b>{(t.contacts?.phones || []).join(", ")}</b></span>
+          <span>📍 <b>{t.contacts?.address}</b></span>
           <span>✉ <b>{t.contacts?.email}</b></span>
         </div>
       </div>
