@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { fileToText } from "../../../lib/parse";
-import { extractTrip } from "../../../lib/openai";
+import { extractTrip, extractTripFromImage } from "../../../lib/openai";
 import { extractPdfImages } from "../../../lib/pdfImages";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
+
+const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
 
 export async function POST(req) {
   try {
@@ -14,7 +16,17 @@ export async function POST(req) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const name = file.name.toLowerCase();
+    const mime = file.type || "";
 
+    // Image file → use vision API to read the poster/document photo
+    if (IMAGE_TYPES.includes(mime) || /\.(jpe?g|png|webp|gif|bmp)$/.test(name)) {
+      const b64 = buffer.toString("base64");
+      const imgMime = mime || "image/jpeg";
+      const trip = await extractTripFromImage(b64, imgMime);
+      return NextResponse.json({ trip, source_file: file.name });
+    }
+
+    // Text-based file → extract text then run AI
     const text = await fileToText(buffer, file.name);
     if (!text || text.trim().length < 20) {
       return NextResponse.json(
@@ -28,15 +40,10 @@ export async function POST(req) {
       name.endsWith(".pdf") ? extractPdfImages(buffer) : Promise.resolve([]),
     ]);
 
-    // Debug: log what the AI returned for the price table
-    console.log("[extract] price_table from AI:", JSON.stringify(trip.price_table, null, 2));
-
     // Auto-assign extracted images to days (by order, skippable by user)
     if (pdfImages.length > 0) {
       for (let i = 0; i < trip.days.length; i++) {
-        if (pdfImages[i]) {
-          trip.days[i].photo = pdfImages[i];
-        }
+        if (pdfImages[i]) trip.days[i].photo = pdfImages[i];
       }
     }
 

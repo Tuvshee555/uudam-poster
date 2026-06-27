@@ -256,28 +256,8 @@ export default function Home() {
   async function handleFile(file) {
     if (!file) return;
     setError("");
-
-    // Image files → set as hero background directly, no AI needed
-    if (file.type.startsWith("image/")) {
-      try {
-        const dataUrl = await resizeImage(file, 1500);
-        if (trip) {
-          upd(["hero_image"], dataUrl);
-        } else {
-          // No poster yet — start a template and set the hero image
-          const t = normalizeTripData(createDefaultTrip());
-          t.hero_image = dataUrl;
-          setTrip(t);
-          setTripId(null);
-          setSource(file.name);
-        }
-      } catch (e) {
-        setError("Зураг уншихад алдаа гарлаа: " + String(e.message || e));
-      }
-      return;
-    }
-
-    setBusy("AI бичиг баримтыг уншиж байна…");
+    const isImage = file.type.startsWith("image/");
+    setBusy(isImage ? "AI зургийг уншиж байна…" : "AI бичиг баримтыг уншиж байна…");
     try {
       const fd = new FormData();
       fd.append("file", file);
