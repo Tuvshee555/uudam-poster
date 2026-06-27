@@ -107,7 +107,7 @@ button,input,textarea{font:inherit}
 .page .ptable-add-row-btn{margin-top:6px;display:inline-flex;align-items:center;border:1px dashed #b9c6d8;background:#fff;color:var(--navy-soft);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer}
 .page .ptable-add-row-btn:hover{border-color:var(--navy);background:#f4f7fb}
 .page .pwhen{font-weight:700;color:var(--navy);white-space:normal;min-width:90px}
-.page .pamt{font-weight:800}
+.page .pamt{font-weight:800;white-space:normal;min-width:110px}
 .page .pnote{margin-top:8px;color:var(--muted);font-size:13px;font-style:italic}
 
 /* Program header */

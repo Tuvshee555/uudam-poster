@@ -47,12 +47,11 @@ function normalizeTripData(trip) {
     photo_caption: day.photo_caption || "",
   }));
   if (clone.price_table) {
-    // Remove empty column names (keep columns with actual labels)
     clone.price_table.columns = (clone.price_table.columns || []).filter((x) => String(x || "").trim());
     const colCount = clone.price_table.columns.length;
 
-    // Filter rows that have at least a date or one non-empty cell
-    clone.price_table.rows = (clone.price_table.rows || [])
+    // Normalize rows: filter empty, pad/clamp cells
+    const cleaned = (clone.price_table.rows || [])
       .filter((r) => {
         const hasDate = String(r?.dates || "").trim();
         const hasCells = (r?.cells || []).some((x) => String(x || "").trim());
@@ -60,9 +59,27 @@ function normalizeTripData(trip) {
       })
       .map((r) => ({
         ...r,
-        // Pad short rows / clamp overflow rows to exact column count
         cells: Array.from({ length: colCount }, (_, i) => r.cells?.[i] ?? ""),
       }));
+
+    // Merge rows with identical prices — combine their dates into one row
+    const merged = [];
+    for (const row of cleaned) {
+      const sig = row.cells.join("||");
+      const existing = merged.find((m) => m.cells.join("||") === sig);
+      if (existing) {
+        // Add this date to the existing row's dates
+        const existingDates = existing.dates.split(/[,،、]\s*/);
+        const newDate = String(row.dates || "").trim();
+        if (newDate && !existingDates.includes(newDate)) {
+          existing.dates = [...existingDates, newDate].join(", ");
+        }
+      } else {
+        merged.push({ ...row, dates: String(row.dates || "").trim() });
+      }
+    }
+
+    clone.price_table.rows = merged;
   }
   return clone;
 }
