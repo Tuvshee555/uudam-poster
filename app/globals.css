@@ -177,7 +177,7 @@ body.exporting .page .pwhen-input{background:transparent !important}
 
 /* Footer */
 .page .foot{margin:36px -56px 0;padding:16px 56px;background:var(--navy);color:#fff;display:flex;gap:24px;flex-wrap:wrap;font-size:14px}
-.page .foot b{color:#bcd2e8;font-weight:600}
+.page .foot b{color:#fff;font-weight:800}
 
 .page .endpad{height:32px}
 

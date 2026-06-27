@@ -136,7 +136,7 @@ function buildHTML(t) {
     .pamt{font-weight:800;color:${INK}}
     .pnote{margin-top:8px;color:${MUTED};font-size:13px;font-style:italic}
     .foot{margin:36px -56px 0;padding:16px 56px;background:${NAVY};color:#fff;display:flex;gap:24px;flex-wrap:wrap;font-size:14px}
-    .foot b{color:#bcd2e8;font-weight:600}
+    .foot b{color:#fff;font-weight:800}
     .program-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:36px 0 12px;padding-top:24px;border-top:1px solid ${LINE}}
     .section-kicker{font-size:10px;text-transform:uppercase;letter-spacing:2.5px;color:${GOLD};font-weight:900;margin-bottom:4px}
     .program-count{font-size:13px;font-weight:800;color:${NAVY};border:1px solid ${LINE};border-radius:999px;padding:6px 14px;white-space:nowrap}
