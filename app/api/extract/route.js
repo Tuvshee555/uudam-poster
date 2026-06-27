@@ -1,22 +1,39 @@
 import { NextResponse } from "next/server";
 import { fileToText } from "../../../lib/parse";
-import { extractTrip, extractTripFromImage, extractTripFromPdf, verifyDaySummaries } from "../../../lib/openai";
+import { extractTrip, extractTripFromImage, extractTripFromPdf } from "../../../lib/openai";
+import { extractTripFromPdfGemini } from "../../../lib/gemini";
 import { extractPdfImages } from "../../../lib/pdfImages";
 
 export const runtime = "nodejs";
-// Vercel free tier caps function duration at 10s. The PDF-direct vision extract returns
-// well within that. (Hi-res page rendering for reading ✓/✗ meal marks takes ~45s on
-// graphics-heavy PDFs and can't run here — meals are best-effort + manually toggleable.)
 export const maxDuration = 60;
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
 
-// Spread the extracted photos across the days (cycle if fewer photos than days)
+// Cap images per day to avoid cycling 20 photos for 9 days
+const MAX_PDF_IMAGES = 9;
+
 function assignPhotos(trip, pdfImages) {
   if (!pdfImages?.length) return;
+  const capped = pdfImages.slice(0, MAX_PDF_IMAGES);
   for (let i = 0; i < trip.days.length; i++) {
-    trip.days[i].photo = pdfImages[i % pdfImages.length];
+    trip.days[i].photo = capped[i % capped.length];
   }
+}
+
+// Extract trip from PDF: Gemini first (faster, smarter on layout), OpenAI as fallback
+async function extractPdfTrip(b64, filename) {
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      return await extractTripFromPdfGemini(b64, filename);
+    } catch (err) {
+      console.warn("Gemini PDF extract failed, trying OpenAI:", err.message);
+    }
+  }
+  return extractTripFromPdf(b64, filename).catch(async (visionErr) => {
+    console.warn("OpenAI PDF vision failed, falling back to text:", visionErr.message);
+    // This fallback path only runs if both vision models fail
+    throw visionErr;
+  });
 }
 
 export async function POST(req) {
@@ -29,41 +46,26 @@ export async function POST(req) {
     const name = file.name.toLowerCase();
     const mime = file.type || "";
 
-    // Image file → vision API reads it as a picture
     if (IMAGE_TYPES.includes(mime) || /\.(jpe?g|png|webp|gif|bmp)$/.test(name)) {
       const b64 = buffer.toString("base64");
       const trip = await extractTripFromImage(b64, mime || "image/jpeg");
       return NextResponse.json({ trip, source_file: file.name });
     }
 
-    // PDF → send the file straight to vision. The model renders the PDF and reads it
-    // VISUALLY, so multi-column / scrambled-text layouts map day text to the right day.
-    // We still pull embedded images out of the PDF bytes for the day photos.
     if (name.endsWith(".pdf") || mime === "application/pdf") {
       const b64 = buffer.toString("base64");
-      const [rawTrip, pdfImages] = await Promise.all([
-        extractTripFromPdf(b64, file.name).catch(async (visionErr) => {
-          // Vision failed (model/size limit) → fall back to plain-text extraction
-          console.warn("PDF vision extract failed, falling back to text:", visionErr.message);
-          const text = await fileToText(buffer, file.name);
-          if (!text || text.trim().length < 20) throw visionErr;
-          return extractTrip(text);
-        }),
+      const [trip, pdfImages] = await Promise.all([
+        extractPdfTrip(b64, file.name),
         extractPdfImages(buffer),
       ]);
-      // Second-pass: verify day summaries are under the correct day (catches day-swap bugs)
-      const trip = await verifyDaySummaries(rawTrip, b64, file.name);
       assignPhotos(trip, pdfImages);
       return NextResponse.json({ trip, source_file: file.name });
     }
 
-    // Other text-based files (docx, txt) → extract text then run AI
+    // docx / txt
     const text = await fileToText(buffer, file.name);
     if (!text || text.trim().length < 20) {
-      return NextResponse.json(
-        { error: "Could not read text from this file." },
-        { status: 422 }
-      );
+      return NextResponse.json({ error: "Could not read text from this file." }, { status: 422 });
     }
     const trip = await extractTrip(text);
     return NextResponse.json({ trip, source_file: file.name });
