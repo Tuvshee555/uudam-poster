@@ -173,20 +173,24 @@ export default function Poster({
                     </th>
                   ) : null}
                 </tr>
-                {priceTable.rows.map((r, ri) => (
+                {priceTable.rows.map((r, ri) => {
+                  const colCount = priceTable.columns.length;
+                  const cells = Array.from({ length: colCount }, (_, ci) => r.cells[ci] ?? "");
+                  return (
                   <tr key={ri}>
                     <td className="pwhen">
                       {t.price_table ? <Ed value={r.dates} placeholder="Огноо" onChange={(v) => upd(["price_table", "rows", ri, "dates"], v)} /> : r.dates}
                       {t.price_table ? <RemoveBtn onClick={() => removeItem(["price_table", "rows"], ri)} /> : null}
                     </td>
-                    {r.cells.map((c, ci) => (
+                    {cells.map((c, ci) => (
                       <td className="pamt" key={ci}>
                         {t.price_table ? <Ed value={c} placeholder="Үнэ" onChange={(v) => upd(["price_table", "rows", ri, "cells", ci], v)} /> : c}
                       </td>
                     ))}
                     {t.price_table ? <td className="editor-only ptable-add-col-th" /> : null}
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
             {t.price_table ? (
