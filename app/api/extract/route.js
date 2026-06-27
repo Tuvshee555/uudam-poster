@@ -4,6 +4,9 @@ import { extractTrip, extractTripFromImage, extractTripFromPdf } from "../../../
 import { extractPdfImages } from "../../../lib/pdfImages";
 
 export const runtime = "nodejs";
+// Vercel free tier caps function duration at 10s. The PDF-direct vision extract returns
+// well within that. (Hi-res page rendering for reading ✓/✗ meal marks takes ~45s on
+// graphics-heavy PDFs and can't run here — meals are best-effort + manually toggleable.)
 export const maxDuration = 60;
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
