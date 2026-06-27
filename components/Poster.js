@@ -161,14 +161,14 @@ export default function Poster({
                   <th>Огноо</th>
                   {priceTable.columns.map((c, ci) => (
                     <th key={ci} className="ptable-col-head">
-                      {t.price_table ? <Ed value={c} onChange={(v) => upd(["price_table", "columns", ci], v)} /> : c}
+                      {t.price_table ? <Ed value={c} placeholder="Багана нэр" onChange={(v) => upd(["price_table", "columns", ci], v)} /> : c}
                       {t.price_table && priceTable.columns.length > 1 ? (
                         <button type="button" className="editor-only col-remove-btn" onClick={() => removePriceCol(ci)} title="Багана устгах">×</button>
                       ) : null}
                     </th>
                   ))}
                   {t.price_table ? (
-                    <th className="editor-only ptable-add-col-th">
+                    <th className="editor-only ptable-add-col-th ptable-add-col-header">
                       <button type="button" className="ptable-add-btn" onClick={addPriceCol} title="Багана нэмэх">+</button>
                     </th>
                   ) : null}
@@ -176,12 +176,12 @@ export default function Poster({
                 {priceTable.rows.map((r, ri) => (
                   <tr key={ri}>
                     <td className="pwhen">
-                      {t.price_table ? <Ed value={r.dates} onChange={(v) => upd(["price_table", "rows", ri, "dates"], v)} /> : r.dates}
+                      {t.price_table ? <Ed value={r.dates} placeholder="Огноо" onChange={(v) => upd(["price_table", "rows", ri, "dates"], v)} /> : r.dates}
                       {t.price_table ? <RemoveBtn onClick={() => removeItem(["price_table", "rows"], ri)} /> : null}
                     </td>
                     {r.cells.map((c, ci) => (
                       <td className="pamt" key={ci}>
-                        {t.price_table ? <Ed value={c} onChange={(v) => upd(["price_table", "rows", ri, "cells", ci], v)} /> : c}
+                        {t.price_table ? <Ed value={c} placeholder="Үнэ" onChange={(v) => upd(["price_table", "rows", ri, "cells", ci], v)} /> : c}
                       </td>
                     ))}
                     {t.price_table ? <td className="editor-only ptable-add-col-th" /> : null}
@@ -275,7 +275,7 @@ export default function Poster({
                               onClick={() => upd(["days", i, "meals", k], !on)}
                             >
                               <span className="mealname">{label}</span>
-                              <span className="mealstate">{on ? "Багтсан" : "Ороогүй"}</span>
+                              <span className="mealstate">{on ? "Багтсан" : "Багтаагүй"}</span>
                             </button>
                           );
                         })}

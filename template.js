@@ -109,9 +109,9 @@ function dayRow(d) {
           </div>
           <div class="dside">
             <div class="mealgrid">
-              <div class="mealcard ${d.meals?.breakfast ? "yes" : "no"}"><span>Өглөө</span><span>${d.meals?.breakfast ? "Багтсан" : "Ороогүй"}</span></div>
-              <div class="mealcard ${d.meals?.lunch ? "yes" : "no"}"><span>Өдөр</span><span>${d.meals?.lunch ? "Багтсан" : "Ороогүй"}</span></div>
-              <div class="mealcard ${d.meals?.dinner ? "yes" : "no"}"><span>Орой</span><span>${d.meals?.dinner ? "Багтсан" : "Ороогүй"}</span></div>
+              <div class="mealcard ${d.meals?.breakfast ? "yes" : "no"}"><span>Өглөө</span><span>${d.meals?.breakfast ? "Багтсан" : "Багтаагүй"}</span></div>
+              <div class="mealcard ${d.meals?.lunch ? "yes" : "no"}"><span>Өдөр</span><span>${d.meals?.lunch ? "Багтсан" : "Багтаагүй"}</span></div>
+              <div class="mealcard ${d.meals?.dinner ? "yes" : "no"}"><span>Орой</span><span>${d.meals?.dinner ? "Багтсан" : "Багтаагүй"}</span></div>
             </div>
             ${photo}
           </div>

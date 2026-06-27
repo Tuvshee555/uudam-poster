@@ -100,7 +100,8 @@ button,input,textarea{font:inherit}
 .page .ptable-col-head{position:relative}
 .page .col-remove-btn{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .12s;padding:0}
 .page .ptable-col-head:hover .col-remove-btn{opacity:1}
-.page .ptable-add-col-th{background:var(--navy);width:36px;padding:0 !important;text-align:center;vertical-align:middle}
+.page .ptable-add-col-th{width:36px;padding:0 !important;text-align:center;vertical-align:middle;background:transparent;border:none}
+.page .ptable-add-col-header{background:var(--navy)}
 .page .ptable-add-btn{background:rgba(255,255,255,.15);border:1px dashed rgba(255,255,255,.4);color:#fff;border-radius:6px;width:26px;height:26px;font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .page .ptable-add-btn:hover{background:rgba(255,255,255,.3)}
 .page .ptable-add-row-btn{margin-top:6px;display:inline-flex;align-items:center;border:1px dashed #b9c6d8;background:#fff;color:var(--navy-soft);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer}
@@ -175,9 +176,12 @@ button,input,textarea{font:inherit}
 .page [contenteditable]{outline:none;border-radius:6px;transition:box-shadow .12s,background .12s}
 .page [contenteditable]:hover{box-shadow:0 0 0 2px #cfe0f1 inset}
 .page [contenteditable]:focus{box-shadow:0 0 0 2px var(--navy) inset;background:#f8fafc}
+.page [contenteditable]::selection{background:#2563eb;color:#fff}
+.page th [contenteditable]::selection{background:#f2bd4a;color:#113e67}
 .page .dsummary.prose[contenteditable]:hover,
 .page .dsummary.prose[contenteditable]:focus{box-shadow:none;background:transparent}
-.page [contenteditable][data-placeholder]:empty:before{content:attr(data-placeholder);color:#9aaaba;font-style:italic}
+.page [contenteditable][data-placeholder]:empty:before{content:attr(data-placeholder);color:#9aaaba;font-style:italic;font-weight:400}
+.page th [contenteditable][data-placeholder]:empty:before{color:rgba(255,255,255,.45)}
 
 body.exporting .editor-only,
 body.exporting .hidden-input{display:none !important}
