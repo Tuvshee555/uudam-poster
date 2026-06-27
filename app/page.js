@@ -568,6 +568,8 @@ export default function Home() {
                     removeItem={removeItem}
                     insertDay={insertDay}
                     reorderDay={reorderDay}
+                    addPriceRow={addPriceRow}
+                    addPriceCol={addPriceCol}
                     removePriceCol={removePriceCol}
                     logoSrc="/uudam-logo.jpg"
                     page1Ref={page1Ref}

@@ -101,6 +101,8 @@ export default function Poster({
   removeItem,
   insertDay,
   reorderDay,
+  addPriceRow,
+  addPriceCol,
   removePriceCol,
   logoSrc,
   page1Ref,
@@ -152,6 +154,7 @@ export default function Poster({
           <div className="sec compact-sec">
             <h3>Үнэ</h3>
             {priceTable ? (
+            <>
             <table className="ptable">
               <tbody>
                 <tr>
@@ -160,15 +163,15 @@ export default function Poster({
                     <th key={ci} className="ptable-col-head">
                       {t.price_table ? <Ed value={c} onChange={(v) => upd(["price_table", "columns", ci], v)} /> : c}
                       {t.price_table && priceTable.columns.length > 1 ? (
-                        <button
-                          type="button"
-                          className="editor-only col-remove-btn"
-                          onClick={() => removePriceCol(ci)}
-                          title="Багана устгах"
-                        >×</button>
+                        <button type="button" className="editor-only col-remove-btn" onClick={() => removePriceCol(ci)} title="Багана устгах">×</button>
                       ) : null}
                     </th>
                   ))}
+                  {t.price_table ? (
+                    <th className="editor-only ptable-add-col-th">
+                      <button type="button" className="ptable-add-btn" onClick={addPriceCol} title="Багана нэмэх">+</button>
+                    </th>
+                  ) : null}
                 </tr>
                 {priceTable.rows.map((r, ri) => (
                   <tr key={ri}>
@@ -181,10 +184,15 @@ export default function Poster({
                         {t.price_table ? <Ed value={c} onChange={(v) => upd(["price_table", "rows", ri, "cells", ci], v)} /> : c}
                       </td>
                     ))}
+                    {t.price_table ? <td className="editor-only ptable-add-col-th" /> : null}
                   </tr>
                 ))}
               </tbody>
             </table>
+            {t.price_table ? (
+              <button type="button" className="editor-only ptable-add-row-btn" onClick={addPriceRow}>+ Мөр нэмэх</button>
+            ) : null}
+            </>
             ) : null}
             {priceTable?.note && !t.price_table ? <div className="pnote">{priceTable.note}</div> : null}
             {t.price_note ? (
