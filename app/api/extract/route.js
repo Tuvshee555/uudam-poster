@@ -40,16 +40,10 @@ export async function POST(req) {
       name.endsWith(".pdf") ? extractPdfImages(buffer) : Promise.resolve([]),
     ]);
 
-    // Spread extracted images evenly across days
+    // Assign images to days — cycle through if more days than images
     if (pdfImages.length > 0) {
-      const dayCount = trip.days.length;
-      const imgCount = pdfImages.length;
-      for (let i = 0; i < dayCount; i++) {
-        // Evenly distribute: pick image at proportional index
-        const imgIdx = imgCount <= dayCount
-          ? i                                              // fewer images than days: assign sequentially
-          : Math.round(i * (imgCount - 1) / (dayCount - 1 || 1)); // more images: spread evenly
-        if (pdfImages[imgIdx]) trip.days[i].photo = pdfImages[imgIdx];
+      for (let i = 0; i < trip.days.length; i++) {
+        trip.days[i].photo = pdfImages[i % pdfImages.length];
       }
     }
 
