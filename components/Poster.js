@@ -320,7 +320,6 @@ export default function Poster({
                           + Дараа өдөр
                         </button>
                       </div>
-                    </div>
                   </div>
                 </div>
               </div>
