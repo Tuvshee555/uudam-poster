@@ -194,7 +194,6 @@ export default function Poster({
             <div className="section-kicker">ХӨТӨЛБӨР</div>
             <div className="ititle">{t.title}</div>
           </div>
-          <div className="program-count">{t.duration_days} өдөр</div>
         </div>
 
         <div className="days">
@@ -216,7 +215,10 @@ export default function Poster({
                 }}
                 onDragEnd={() => { setDragOver(null); dragIdx.current = null; }}
               >
-                <div className="dnum drag-handle" title="Чирж байрлал солих" data-day={d.day}>⠿</div>
+                <div className="dnum" title="Чирж байрлал солих">
+                  <span className="dnum-num">{d.day}</span>
+                  <span className="dnum-handle editor-only">⠿</span>
+                </div>
 
                 <div className="daycard">
                   <div className="droute">

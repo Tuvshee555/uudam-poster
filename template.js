@@ -146,11 +146,11 @@ function buildHTML(t) {
     .hero .htitle{font-size:50px;line-height:1.06;font-weight:900;letter-spacing:-1px;max-width:760px}
     .sec{margin-top:28px}
     .sec h3{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:${MUTED};font-weight:800;margin-bottom:10px}
-    .ptable{width:100%;border-collapse:collapse;margin-top:4px}
-    .ptable th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#fff;font-weight:700;padding:10px 14px;background:${NAVY}}
-    .ptable td{padding:12px 14px;border-bottom:1px solid ${LINE};font-size:15px;vertical-align:top}
+    .ptable{width:100%;border-collapse:collapse;margin-top:4px;table-layout:auto}
+    .ptable th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.3px;color:#fff;font-weight:700;padding:9px 10px;background:${NAVY};white-space:nowrap}
+    .ptable td{padding:10px 10px;border-bottom:1px solid ${LINE};font-size:13px;vertical-align:top;white-space:nowrap}
     .ptable tr:last-child td{border-bottom:none}
-    .pwhen{font-weight:700;color:${NAVY}}
+    .pwhen{font-weight:700;color:${NAVY};white-space:normal;min-width:90px}
     .pamt{font-weight:800;color:${INK}}
     .pnote{margin-top:8px;color:${MUTED};font-size:13px;font-style:italic}
     .foot{margin:36px -56px 0;padding:16px 56px;background:${NAVY};color:#fff;display:flex;gap:24px;flex-wrap:wrap;font-size:14px}
@@ -205,7 +205,6 @@ function buildHTML(t) {
           <div class="section-kicker">ХӨТӨЛБӨР</div>
           <div class="ititle">${t.title}</div>
         </div>
-        <div class="program-count">${t.duration_days} өдөр</div>
       </div>
 
       <div class="days">${days}</div>
