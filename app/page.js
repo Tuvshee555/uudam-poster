@@ -88,7 +88,6 @@ export default function Home() {
   const [trip, setTrip] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [source, setSource] = useState("");
-  const [lastPdf, setLastPdf] = useState(null); // last uploaded PDF, for meal re-read
   const [history, setHistory] = useState([]);
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
@@ -258,7 +257,6 @@ export default function Home() {
     if (!file) return;
     setError("");
     const isImage = file.type.startsWith("image/");
-    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
     setBusy(isImage ? "AI зургийг уншиж байна…" : "AI бичиг баримтыг уншиж байна…");
     try {
       const fd = new FormData();
@@ -268,36 +266,8 @@ export default function Home() {
       setTrip(normalizeTripData(r.trip));
       setTripId(null);
       setSource(r.source_file || file.name);
-      setLastPdf(isPdf ? file : null);
     } catch (e) {
       setError(String(e.message || e));
-    } finally {
-      setBusy("");
-    }
-  }
-
-  // Optional, slow (~45s): rasterize the day-program page at high DPI and read the
-  // ✓/✗ meal marks precisely. Only works where the function can run long enough
-  // (local dev / paid hosting); on free-tier it may time out — meals stay manual then.
-  async function rereadMeals() {
-    if (!lastPdf) return;
-    setError("");
-    setBusy("Хоолны мэдээллийг зургаар дахин уншиж байна… (~1 мин)");
-    try {
-      const fd = new FormData();
-      fd.append("file", lastPdf);
-      const r = await fetch("/api/meals", { method: "POST", body: fd }).then((x) => x.json());
-      if (r.error) throw new Error(r.error);
-      setTrip((t) => {
-        const clone = structuredClone(t);
-        for (const day of clone.days) {
-          const m = r.meals?.[day.day];
-          if (m) day.meals = { breakfast: !!m.breakfast, lunch: !!m.lunch, dinner: !!m.dinner };
-        }
-        return clone;
-      });
-    } catch (e) {
-      setError("Хоол дахин унших амжилтгүй: " + String(e.message || e));
     } finally {
       setBusy("");
     }
@@ -581,11 +551,6 @@ export default function Home() {
                   <button type="button" onClick={addPriceRow} disabled={!trip.price_table}>+ Үнэ мөр</button>
                   <button type="button" onClick={addPriceCol} disabled={!trip.price_table}>+ Үнэ багана</button>
                   <button type="button" onClick={toggleFlights}>{trip.flights ? "Нислэг нуух" : "Нислэг нэмэх"}</button>
-                  {lastPdf && (
-                    <button type="button" onClick={rereadMeals} disabled={!!busy} title="PDF-ийн ✓/✗ тэмдгийг зургаар нягт уншиж хоолыг засна (~1 мин)">
-                      🍽 Хоол дахин уншуулах
-                    </button>
-                  )}
                 </div>
 
                 <div className="edit-hints">
