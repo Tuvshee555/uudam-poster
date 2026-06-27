@@ -28,6 +28,9 @@ export async function POST(req) {
       name.endsWith(".pdf") ? extractPdfImages(buffer) : Promise.resolve([]),
     ]);
 
+    // Debug: log what the AI returned for the price table
+    console.log("[extract] price_table from AI:", JSON.stringify(trip.price_table, null, 2));
+
     // Auto-assign extracted images to days (by order, skippable by user)
     if (pdfImages.length > 0) {
       for (let i = 0; i < trip.days.length; i++) {

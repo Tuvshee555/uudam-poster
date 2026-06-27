@@ -47,17 +47,11 @@ function normalizeTripData(trip) {
     photo_caption: day.photo_caption || "",
   }));
   if (clone.price_table) {
-    // Strip a leading date/огноо column — it duplicates the built-in dates field
-    const dateColPattern = /^(огноо|дата|date|№|сар|он)/i;
-    if (clone.price_table.columns?.length > 0 && dateColPattern.test(String(clone.price_table.columns[0]).trim())) {
-      clone.price_table.columns = clone.price_table.columns.slice(1);
-      clone.price_table.rows = (clone.price_table.rows || []).map((r) => ({
-        ...r,
-        cells: r.cells?.slice(1) ?? [],
-      }));
-    }
+    // Remove empty column names (keep columns with actual labels)
     clone.price_table.columns = (clone.price_table.columns || []).filter((x) => String(x || "").trim());
     const colCount = clone.price_table.columns.length;
+
+    // Filter rows that have at least a date or one non-empty cell
     clone.price_table.rows = (clone.price_table.rows || [])
       .filter((r) => {
         const hasDate = String(r?.dates || "").trim();
@@ -66,7 +60,7 @@ function normalizeTripData(trip) {
       })
       .map((r) => ({
         ...r,
-        // Clamp to exact column count — no overflow, pad if short
+        // Pad short rows / clamp overflow rows to exact column count
         cells: Array.from({ length: colCount }, (_, i) => r.cells?.[i] ?? ""),
       }));
   }
