@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { fileToText } from "../../../lib/parse";
-import { extractTrip, extractTripFromImage, extractTripFromPdf } from "../../../lib/openai";
+import { extractTrip, extractTripFromImage, extractTripFromPdf, verifyDaySummaries } from "../../../lib/openai";
 import { extractPdfImages } from "../../../lib/pdfImages";
 
 export const runtime = "nodejs";
@@ -41,7 +41,7 @@ export async function POST(req) {
     // We still pull embedded images out of the PDF bytes for the day photos.
     if (name.endsWith(".pdf") || mime === "application/pdf") {
       const b64 = buffer.toString("base64");
-      const [trip, pdfImages] = await Promise.all([
+      const [rawTrip, pdfImages] = await Promise.all([
         extractTripFromPdf(b64, file.name).catch(async (visionErr) => {
           // Vision failed (model/size limit) → fall back to plain-text extraction
           console.warn("PDF vision extract failed, falling back to text:", visionErr.message);
@@ -51,6 +51,8 @@ export async function POST(req) {
         }),
         extractPdfImages(buffer),
       ]);
+      // Second-pass: verify day summaries are under the correct day (catches day-swap bugs)
+      const trip = await verifyDaySummaries(rawTrip, b64, file.name);
       assignPhotos(trip, pdfImages);
       return NextResponse.json({ trip, source_file: file.name });
     }
