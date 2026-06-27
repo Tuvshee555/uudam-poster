@@ -256,6 +256,27 @@ export default function Home() {
   async function handleFile(file) {
     if (!file) return;
     setError("");
+
+    // Image files → set as hero background directly, no AI needed
+    if (file.type.startsWith("image/")) {
+      try {
+        const dataUrl = await resizeImage(file, 1500);
+        if (trip) {
+          upd(["hero_image"], dataUrl);
+        } else {
+          // No poster yet — start a template and set the hero image
+          const t = normalizeTripData(createDefaultTrip());
+          t.hero_image = dataUrl;
+          setTrip(t);
+          setTripId(null);
+          setSource(file.name);
+        }
+      } catch (e) {
+        setError("Зураг уншихад алдаа гарлаа: " + String(e.message || e));
+      }
+      return;
+    }
+
     setBusy("AI бичиг баримтыг уншиж байна…");
     try {
       const fd = new FormData();
@@ -510,13 +531,13 @@ export default function Home() {
             >
               <input
                 type="file"
-                accept=".pdf,.docx,.txt"
+                accept=".pdf,.docx,.txt,image/*"
                 style={{ display: "none" }}
                 onChange={(e) => handleFile(e.target.files[0])}
               />
               <div className="ic">⬆</div>
-              <div className="dt">Файлаа энд чирж тавь</div>
-              <div className="ds">эсвэл дарж сонгоно уу · Word (.docx), PDF, .txt</div>
+              <div className="dt">Файл эсвэл зураг энд чирж тавь</div>
+              <div className="ds">Word (.docx), PDF, .txt · JPG, PNG, WEBP зураг</div>
             </label>
             {busy && <div className="note" style={{ marginTop: 14, textAlign: "center" }}>⏳ {busy}</div>}
             {error && <div className="err" style={{ textAlign: "center" }}>⚠ {error}</div>}
