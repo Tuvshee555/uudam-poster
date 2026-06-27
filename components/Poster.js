@@ -179,8 +179,26 @@ export default function Poster({
                   return (
                   <tr key={ri}>
                     <td className="pwhen">
-                      {t.price_table ? <Ed value={r.dates} placeholder="Огноо" onChange={(v) => upd(["price_table", "rows", ri, "dates"], v)} /> : r.dates}
-                      {t.price_table ? <RemoveBtn onClick={() => removeItem(["price_table", "rows"], ri)} /> : null}
+                      {t.price_table ? (
+                        <>
+                          <textarea
+                            className="pwhen-input"
+                            key={r.dates}
+                            defaultValue={r.dates}
+                            placeholder="Огноо"
+                            rows={1}
+                            ref={(el) => {
+                              if (el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; }
+                            }}
+                            onInput={(e) => {
+                              e.target.style.height = "auto";
+                              e.target.style.height = e.target.scrollHeight + "px";
+                            }}
+                            onBlur={(e) => upd(["price_table", "rows", ri, "dates"], e.target.value.trim())}
+                          />
+                          <RemoveBtn onClick={() => removeItem(["price_table", "rows"], ri)} />
+                        </>
+                      ) : r.dates}
                     </td>
                     {cells.map((c, ci) => (
                       <td className="pamt" key={ci}>

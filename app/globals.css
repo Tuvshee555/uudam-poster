@@ -106,7 +106,12 @@ button,input,textarea{font:inherit}
 .page .ptable-add-btn:hover{background:rgba(255,255,255,.3)}
 .page .ptable-add-row-btn{margin-top:6px;display:inline-flex;align-items:center;border:1px dashed #b9c6d8;background:#fff;color:var(--navy-soft);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer}
 .page .ptable-add-row-btn:hover{border-color:var(--navy);background:#f4f7fb}
-.page .pwhen{font-weight:700;color:var(--navy);white-space:normal;min-width:90px;max-width:220px;word-break:break-word}
+.page .pwhen{font-weight:700;color:var(--navy);white-space:normal;width:200px;min-width:90px;max-width:200px;word-break:break-word;vertical-align:top}
+.page .pwhen-input{width:100%;min-width:0;border:none;outline:none;background:transparent;font:700 13px/1.5 inherit;color:var(--navy);resize:none;overflow:hidden;padding:0;margin:0;display:block;word-break:break-word}
+.page .pwhen-input::placeholder{color:#9aaaba;font-weight:400;font-style:italic}
+.page .pwhen-input:hover{background:rgba(0,0,0,.03);border-radius:4px}
+.page .pwhen-input:focus{background:rgba(0,0,0,.04);border-radius:4px}
+body.exporting .page .pwhen-input{background:transparent !important}
 .page .pamt{font-weight:800;white-space:normal;min-width:110px}
 .page .price-desc{margin-top:10px;font-size:14px;line-height:1.7;color:var(--ink)}
 .page .price-desc-input{width:100%;min-height:36px;padding:8px 10px;border-radius:8px;border:1px dashed #b9c6d8;font-size:14px;line-height:1.7;color:var(--ink);outline:none;resize:none;font-family:inherit;background:#fff}
