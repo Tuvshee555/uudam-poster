@@ -172,6 +172,30 @@ export default function Home() {
       return clone;
     });
 
+  const addPriceCol = () =>
+    setTrip((t) => {
+      const clone = structuredClone(t);
+      if (!clone.price_table) return clone;
+      clone.price_table.columns.push("Шинэ багана");
+      clone.price_table.rows = clone.price_table.rows.map((r) => ({
+        ...r,
+        cells: [...r.cells, ""],
+      }));
+      return clone;
+    });
+
+  const removePriceCol = (ci) =>
+    setTrip((t) => {
+      const clone = structuredClone(t);
+      if (!clone.price_table) return clone;
+      clone.price_table.columns.splice(ci, 1);
+      clone.price_table.rows = clone.price_table.rows.map((r) => ({
+        ...r,
+        cells: r.cells.filter((_, i) => i !== ci),
+      }));
+      return clone;
+    });
+
   const toggleFlights = () =>
     setTrip((t) => {
       const clone = structuredClone(t);
@@ -496,7 +520,8 @@ export default function Home() {
                   <button type="button" onClick={addDay}>+ Өдөр</button>
                   <button type="button" onClick={removeLastDay} disabled={(trip.days || []).length <= 1}>Сүүлийн өдөр устгах</button>
                   <button type="button" onClick={ensurePriceTable}>Үнийн хүснэгт асаах</button>
-                  <button type="button" onClick={addPriceRow}>+ Үнэ мөр</button>
+                  <button type="button" onClick={addPriceRow} disabled={!trip.price_table}>+ Үнэ мөр</button>
+                  <button type="button" onClick={addPriceCol} disabled={!trip.price_table}>+ Үнэ багана</button>
                   <button type="button" onClick={toggleFlights}>{trip.flights ? "Нислэг нуух" : "Нислэг нэмэх"}</button>
                 </div>
 
@@ -543,6 +568,7 @@ export default function Home() {
                     removeItem={removeItem}
                     insertDay={insertDay}
                     reorderDay={reorderDay}
+                    removePriceCol={removePriceCol}
                     logoSrc="/uudam-logo.jpg"
                     page1Ref={page1Ref}
                     onDayPhotoFile={onDayPhotoFile}

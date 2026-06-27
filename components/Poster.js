@@ -101,6 +101,7 @@ export default function Poster({
   removeItem,
   insertDay,
   reorderDay,
+  removePriceCol,
   logoSrc,
   page1Ref,
   onDayPhotoFile,
@@ -156,8 +157,16 @@ export default function Poster({
                 <tr>
                   <th>Огноо</th>
                   {priceTable.columns.map((c, ci) => (
-                    <th key={ci}>
+                    <th key={ci} className="ptable-col-head">
                       {t.price_table ? <Ed value={c} onChange={(v) => upd(["price_table", "columns", ci], v)} /> : c}
+                      {t.price_table && priceTable.columns.length > 1 ? (
+                        <button
+                          type="button"
+                          className="editor-only col-remove-btn"
+                          onClick={() => removePriceCol(ci)}
+                          title="Багана устгах"
+                        >×</button>
+                      ) : null}
                     </th>
                   ))}
                 </tr>

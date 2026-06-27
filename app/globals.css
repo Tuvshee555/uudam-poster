@@ -97,6 +97,9 @@ button,input,textarea{font:inherit}
 .page .ptable th:last-child{border-radius:0 8px 0 0}
 .page .ptable td{padding:10px 10px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top;white-space:nowrap}
 .page .ptable tr:last-child td{border-bottom:none}
+.page .ptable-col-head{position:relative}
+.page .col-remove-btn{position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:#fff;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .12s;padding:0}
+.page .ptable-col-head:hover .col-remove-btn{opacity:1}
 .page .pwhen{font-weight:700;color:var(--navy);white-space:normal;min-width:90px}
 .page .pamt{font-weight:800}
 .page .pnote{margin-top:8px;color:var(--muted);font-size:13px;font-style:italic}
