@@ -106,8 +106,11 @@ button,input,textarea{font:inherit}
 .page .ptable-add-btn:hover{background:rgba(255,255,255,.3)}
 .page .ptable-add-row-btn{margin-top:6px;display:inline-flex;align-items:center;border:1px dashed #b9c6d8;background:#fff;color:var(--navy-soft);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer}
 .page .ptable-add-row-btn:hover{border-color:var(--navy);background:#f4f7fb}
-.page .pwhen{font-weight:700;color:var(--navy);white-space:normal;min-width:90px}
+.page .pwhen{font-weight:700;color:var(--navy);white-space:normal;min-width:90px;max-width:220px;word-break:break-word}
 .page .pamt{font-weight:800;white-space:normal;min-width:110px}
+.page .price-desc{margin-top:10px;font-size:14px;line-height:1.7;color:var(--ink)}
+.page .price-desc-input{width:100%;min-height:36px;padding:8px 10px;border-radius:8px;border:1px dashed #b9c6d8;font-size:14px;line-height:1.7;color:var(--ink);outline:none;resize:none;font-family:inherit;background:#fff}
+.page .price-desc-input:focus{border-color:var(--navy);border-style:solid}
 .page .pnote{margin-top:8px;color:var(--muted);font-size:13px;font-style:italic}
 
 /* Program header */
@@ -190,6 +193,7 @@ button,input,textarea{font:inherit}
 
 body.exporting .editor-only,
 body.exporting .hidden-input{display:none !important}
+body.exporting .price-desc-input:empty{display:none !important}
 body.exporting .page [contenteditable],
 body.exporting .page [contenteditable]:hover,
 body.exporting .page [contenteditable]:focus{box-shadow:none !important;background:transparent !important}

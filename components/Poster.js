@@ -207,6 +207,14 @@ export default function Poster({
               onChange={(v) => upd(["price_note"], v.replace(/^⚠\s*/, ""))}
             />
             ) : null}
+            {/* Description box — always in editor, hidden on export if empty via CSS */}
+            <Ed
+              as="div"
+              className="price-desc-input"
+              value={t.price_desc || ""}
+              placeholder="Тайлбар нэмэх..."
+              onChange={(v) => upd(["price_desc"], v)}
+            />
           </div>
         ) : null}
 
