@@ -35,25 +35,8 @@ function cleanText(value) {
 }
 
 function buildNarrative(day) {
-  const summary = String(day.summary || "").trim();
-  if (wordCount(summary) >= 20) return summary;
-
-  const activities = (day.activities || []).map((x) => String(x || "").trim()).filter(Boolean);
-  const route = stripFinalPunctuation(day.route || "");
-  const lead = summary ? stripFinalPunctuation(summary) : route;
-  const first = activities.slice(0, 2).join(", ");
-  const rest = activities.slice(2).join(", ");
-  const sentences = [];
-
-  if (lead && first) sentences.push(`${lead} чиглэлд аялж, ${first.toLowerCase()}.`);
-  else if (lead) sentences.push(`${lead} чиглэлд аялан тухайн өдрийн онцлох хөтөлбөрөө өнгөрөөнө.`);
-  else if (first) sentences.push(`${first}.`);
-  if (rest) sentences.push(`${rest[0].toUpperCase()}${rest.slice(1)}.`);
-  if (day.hotel) sentences.push(`Орой ${stripFinalPunctuation(day.hotel)} байрлаж амарна.`);
-
-  const narrative = sentences.join(" ").replace(/\s+/g, " ").trim();
-  if (wordCount(narrative) >= 20) return narrative;
-  return `${narrative} Аяллын хэмнэл тайван үргэлжилж, аялагчид тухайн газрын уур амьсгал, үзэмж, амралтын мэдрэмжийг илүү ойроос мэдрэх боломжтой.`.trim();
+  // Return source text exactly as-is — no rewriting or padding
+  return String(day.summary || "").trim();
 }
 
 function getPriceTable(trip) {
