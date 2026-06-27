@@ -235,48 +235,48 @@ export default function Poster({
                 </div>
 
                 <div className="daycard">
-                  <div className="droute">
-                    <Ed value={d.route} onChange={(v) => upd(["days", i, "route"], v)} />
-                    <RemoveBtn onClick={() => removeItem(["days"], i)} title="Өдөр устгах" />
-                    {d.distance_km ? <span className="km">{d.distance_km} км</span> : null}
-                    {cleanText(d.flight) ? <span className="flt">✈ {cleanText(d.flight)}</span> : null}
-                  </div>
-
-                  <div className="daycontent">
-                    <div className="dmain">
-                      <Ed
-                        as="div"
-                        className="dsummary prose"
-                        value={narrative}
-                        placeholder="Энэ өдрийн аяллын тайлбар энд харагдана."
-                        onChange={(v) => upd(["days", i, "summary"], v)}
-                      />
-
-                      {cleanText(d.hotel) ? (
-                        <div className="dhotel">
-                          🛏 <Ed value={cleanText(d.hotel)} onChange={(v) => upd(["days", i, "hotel"], v)} />
-                        </div>
-                      ) : null}
-
-                      <div className="mealgrid">
-                        {MEAL_LABELS.map(([k, label]) => {
-                          const on = d.meals?.[k];
-                          return (
-                            <button
-                              key={k}
-                              type="button"
-                              className={"mealcard " + (on ? "yes" : "no")}
-                              onClick={() => upd(["days", i, "meals", k], !on)}
-                            >
-                              <span className="mealname">{label}</span>
-                              <span className="mealstate">{on ? "Багтсан" : "Багтаагүй"}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                  {/* Left col: title + text + meals | Right col: photo full height */}
+                  <div className="dmain">
+                    <div className="droute">
+                      <Ed value={d.route} onChange={(v) => upd(["days", i, "route"], v)} />
+                      <RemoveBtn onClick={() => removeItem(["days"], i)} title="Өдөр устгах" />
+                      {d.distance_km ? <span className="km">{d.distance_km} км</span> : null}
+                      {cleanText(d.flight) ? <span className="flt">✈ {cleanText(d.flight)}</span> : null}
                     </div>
 
-                    <div className="dside">
+                    <Ed
+                      as="div"
+                      className="dsummary prose"
+                      value={narrative}
+                      placeholder="Энэ өдрийн аяллын тайлбар энд харагдана."
+                      onChange={(v) => upd(["days", i, "summary"], v)}
+                    />
+
+                    {cleanText(d.hotel) ? (
+                      <div className="dhotel">
+                        🛏 <Ed value={cleanText(d.hotel)} onChange={(v) => upd(["days", i, "hotel"], v)} />
+                      </div>
+                    ) : null}
+
+                    <div className="mealgrid">
+                      {MEAL_LABELS.map(([k, label]) => {
+                        const on = d.meals?.[k];
+                        return (
+                          <button
+                            key={k}
+                            type="button"
+                            className={"mealcard " + (on ? "yes" : "no")}
+                            onClick={() => upd(["days", i, "meals", k], !on)}
+                          >
+                            <span className="mealname">{label}</span>
+                            <span className="mealstate">{on ? "Багтсан" : "Багтаагүй"}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="dside">
                       {d.photo ? (
                         <button
                           type="button"

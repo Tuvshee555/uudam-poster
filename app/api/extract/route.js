@@ -16,6 +16,8 @@ function parseDaySummaries(text) {
   const dayPattern = /(?:DAY\s+(\d+)\s*[:：]|(?:Өдөр|өдөр)\s*\n?\s*(\d+)|第\s*(\d+)\s*天)/gi;
   const MEAL_WORDS = /^(өглөөний\s+цай|өдрийн\s+хоол|оройн\s+хоол|breakfast|lunch|dinner|早餐|午餐|晚餐)/i;
   const SKIP_LINES = /^(шар тэнгис|бэйдайхэ|бээжин|аяллын зургуудаас|ШАР ТЭНГИС|uudam|travel agency)/i;
+  // Lines that signal we've left the day's body text (price info, addresses, phone numbers, itinerary summary header)
+  const STOP_LINE = /(?:₮|юань|том хүн|хүүхэд|настай|доош|\d{4,}\s*₮|todtower|офис|тоот|\d{2,}\s*сар(?:ын)?\s*\d|\+976|7713|8913|9117|9924|хөтөлбөрийн\s+тойм)/i;
 
   const matches = [...text.matchAll(dayPattern)];
   for (let mi = 0; mi < matches.length; mi++) {
@@ -27,10 +29,13 @@ function parseDaySummaries(text) {
     const end = mi + 1 < matches.length ? matches[mi + 1].index : text.length;
     const chunk = text.slice(start, end);
 
-    // Collect non-empty lines that aren't meal labels or page headers
-    const lines = chunk.split("\n")
-      .map(l => l.trim())
-      .filter(l => l && !MEAL_WORDS.test(l) && !SKIP_LINES.test(l));
+    // Collect lines until we hit price/address/phone content
+    const rawLines = chunk.split("\n").map(l => l.trim()).filter(Boolean);
+    const lines = [];
+    for (const l of rawLines) {
+      if (STOP_LINE.test(l)) break;
+      if (!MEAL_WORDS.test(l) && !SKIP_LINES.test(l)) lines.push(l);
+    }
 
     if (lines.length > 0) {
       const joined = lines.join(" ").replace(/\s+/g, " ").trim();

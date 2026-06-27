@@ -84,20 +84,18 @@ function dayRow(d) {
     <div class="dayrow">
       <div class="dnum">${d.day}</div>
       <div class="daycard">
-        <div class="droute">${d.route}${km}${flight}</div>
-        <div class="daycontent">
-          <div class="dmain">
-            <div class="dsummary prose">${summary}</div>
-            ${hotel}
-            <div class="mealgrid">
-              <div class="mealcard ${d.meals?.breakfast ? "yes" : "no"}"><span class="mealname">Өглөөний цай</span><span class="mealstate">${d.meals?.breakfast ? "Багтсан" : "Багтаагүй"}</span></div>
-              <div class="mealcard ${d.meals?.lunch ? "yes" : "no"}"><span class="mealname">Өдрийн хоол</span><span class="mealstate">${d.meals?.lunch ? "Багтсан" : "Багтаагүй"}</span></div>
-              <div class="mealcard ${d.meals?.dinner ? "yes" : "no"}"><span class="mealname">Оройн хоол</span><span class="mealstate">${d.meals?.dinner ? "Багтсан" : "Багтаагүй"}</span></div>
-            </div>
+        <div class="dmain">
+          <div class="droute">${d.route}${km}${flight}</div>
+          <div class="dsummary prose">${summary}</div>
+          ${hotel}
+          <div class="mealgrid">
+            <div class="mealcard ${d.meals?.breakfast ? "yes" : "no"}"><span class="mealname">Өглөөний цай</span><span class="mealstate">${d.meals?.breakfast ? "Багтсан" : "Багтаагүй"}</span></div>
+            <div class="mealcard ${d.meals?.lunch ? "yes" : "no"}"><span class="mealname">Өдрийн хоол</span><span class="mealstate">${d.meals?.lunch ? "Багтсан" : "Багтаагүй"}</span></div>
+            <div class="mealcard ${d.meals?.dinner ? "yes" : "no"}"><span class="mealname">Оройн хоол</span><span class="mealstate">${d.meals?.dinner ? "Багтсан" : "Багтаагүй"}</span></div>
           </div>
-          <div class="dside">
-            ${photo}
-          </div>
+        </div>
+        <div class="dside">
+          ${photo}
         </div>
       </div>
     </div>
@@ -146,12 +144,11 @@ function buildHTML(t) {
     .days:before{content:"";position:absolute;left:22px;top:24px;bottom:60px;width:1px;background:${LINE}}
     .dayrow{display:grid;grid-template-columns:46px 1fr;gap:18px;padding:10px 0}
     .dnum{width:44px;height:44px;border-radius:50%;background:${NAVY};color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
-    .daycard{border:1px solid ${LINE};border-radius:12px;padding:20px 0 20px 24px;background:#fff;border-left:3px solid ${GOLD};overflow:hidden}
-    .droute{font-size:19px;font-weight:900;color:${NAVY};display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-right:24px}
+    .daycard{border:1px solid ${LINE};border-radius:12px;background:#fff;border-left:3px solid ${GOLD};overflow:hidden;display:grid;grid-template-columns:minmax(0,3fr) 2fr;align-items:stretch}
+    .droute{font-size:19px;font-weight:900;color:${NAVY};display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
     .droute .km,.droute .flt{font-size:11px;padding:3px 8px;border-radius:999px;background:#f4f7fb;font-weight:700;color:${MUTED}}
     .droute .flt{color:${NAVY_SOFT}}
-    .daycontent{display:grid;grid-template-columns:minmax(0,3fr) 2fr;gap:0;align-items:stretch;margin-top:14px}
-    .dmain{min-width:0;padding-right:20px;display:flex;flex-direction:column;gap:0}
+    .dmain{min-width:0;padding:20px 20px 20px 24px;display:flex;flex-direction:column}
     .dsummary.prose{font-size:15px;line-height:1.8;color:#2c3e50;flex:1}
     .dhotel{margin-top:10px;color:${MUTED};font-size:13px;line-height:1.4}
     .dside{display:flex;flex-direction:column}
@@ -161,7 +158,7 @@ function buildHTML(t) {
     .mealcard.no{background:#fdf4f4;color:#a04040;border-color:#e8c8c8}
     .mealname{font-size:11px;font-weight:700}
     .mealstate{font-size:10px;font-weight:600;opacity:.75}
-    .dphoto{width:100%;height:100%;min-height:200px;border-radius:0 10px 10px 0;background-size:cover;background-position:center}
+    .dphoto{width:100%;height:100%;min-height:200px;border-radius:0;background-size:cover;background-position:center}
     .endpad{height:32px}
   </style></head><body>
     <div class="page" id="p1">
