@@ -137,28 +137,28 @@ body.exporting .page .pwhen-input{background:transparent !important}
 .page .dnum:hover .dnum-handle{opacity:1}
 
 /* Day card */
-.page .daycard{border:1px solid var(--line);border-radius:12px;padding:20px 24px;background:#fff;border-left:3px solid var(--gold)}
-.page .droute{font-size:19px;font-weight:900;color:var(--navy);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.page .daycard{border:1px solid var(--line);border-radius:12px;padding:20px 0 20px 24px;background:#fff;border-left:3px solid var(--gold);overflow:hidden}
+.page .droute{font-size:19px;font-weight:900;color:var(--navy);display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-right:24px}
 .page .droute .km,.page .droute .flt{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--tint);font-weight:700;color:var(--muted)}
 .page .droute .flt{color:var(--navy-soft)}
-.page .daycontent{display:grid;grid-template-columns:minmax(0,1.7fr) 210px;gap:24px;align-items:start;margin-top:14px}
-.page .dmain{min-width:0}
-.page .dsummary.prose{font-size:16px;line-height:1.8;color:#2c3e50;padding:0;border:none;background:transparent;min-height:0;box-shadow:none !important}
-.page .dhotel{margin-top:12px;color:var(--muted);font-size:13px;line-height:1.4}
+.page .daycontent{display:grid;grid-template-columns:minmax(0,3fr) 2fr;gap:0;align-items:stretch;margin-top:14px}
+.page .dmain{min-width:0;padding-right:20px;display:flex;flex-direction:column;gap:0}
+.page .dsummary.prose{font-size:15px;line-height:1.8;color:#2c3e50;padding:0;border:none;background:transparent;min-height:0;box-shadow:none !important;flex:1}
+.page .dhotel{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.4}
 
-/* Meal badges */
-.page .dside{display:flex;flex-direction:column;gap:10px}
-.page .mealgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-.page .mealcard{display:flex;flex-direction:column;gap:3px;align-items:center;padding:8px 4px;border-radius:8px;border:1px solid var(--line);font-size:10px;font-weight:700;cursor:pointer}
+/* Meal badges — now under text in left column */
+.page .dside{display:flex;flex-direction:column}
+.page .mealgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:14px}
+.page .mealcard{display:flex;flex-direction:row;gap:6px;align-items:center;justify-content:flex-start;padding:7px 10px;border-radius:8px;border:1px solid var(--line);font-size:11px;font-weight:700;cursor:pointer;text-align:left}
 .page .mealcard.yes{background:#f0faf4;color:#1a7a4a;border-color:#b8e2c8}
 .page .mealcard.no{background:#fdf4f4;color:#a04040;border-color:#e8c8c8}
-.page .mealname{font-size:10px}
-.page .mealstate{font-size:9px;font-weight:600;opacity:.8}
+.page .mealname{font-size:11px;font-weight:700}
+.page .mealstate{font-size:10px;font-weight:600;opacity:.75}
 
-/* Day photo */
-.page .dphoto{min-height:160px;border-radius:10px;border:1px solid var(--line);background:#f5f8fc;background-size:cover;background-position:center;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:flex-start;padding:12px;color:#56728f;font-size:13px;font-weight:700;cursor:pointer}
-.page .dphoto.filled{border-style:solid;color:#fff}
-.page .dphoto.dphoto-empty{min-height:80px;background:#f8fafc;border:2px dashed #c8d8e8;align-items:center;justify-content:center;padding:0}
+/* Day photo — fills full right column */
+.page .dphoto{width:100%;height:100%;min-height:200px;border-radius:0 10px 10px 0;border:none;background:#f5f8fc;background-size:cover;background-position:center;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:flex-start;padding:12px;color:#56728f;font-size:13px;font-weight:700;cursor:pointer}
+.page .dphoto.filled{color:#fff}
+.page .dphoto.dphoto-empty{min-height:120px;background:#f8fafc;border:2px dashed #c8d8e8;align-items:center;justify-content:center;padding:0;border-radius:0 10px 10px 0}
 .page .dphoto-add-label{font-size:12px;font-weight:700;color:#7a9ab8}
 .page .dphoto .photohint{display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(12,27,43,.42);color:#fff;font-size:11px;font-weight:700}
 

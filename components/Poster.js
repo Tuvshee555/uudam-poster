@@ -29,9 +29,9 @@ function RemoveBtn({ onClick, title = "Устгах" }) {
 }
 
 const MEAL_LABELS = [
-  ["breakfast", "Өглөө"],
-  ["lunch", "Өдөр"],
-  ["dinner", "Орой"],
+  ["breakfast", "Өглөөний цай"],
+  ["lunch", "Өдрийн хоол"],
+  ["dinner", "Оройн хоол"],
 ];
 
 function cleanText(value) {
@@ -258,9 +258,6 @@ export default function Poster({
                         </div>
                       ) : null}
 
-                    </div>
-
-                    <div className="dside">
                       <div className="mealgrid">
                         {MEAL_LABELS.map(([k, label]) => {
                           const on = d.meals?.[k];
@@ -277,7 +274,9 @@ export default function Poster({
                           );
                         })}
                       </div>
+                    </div>
 
+                    <div className="dside">
                       {d.photo ? (
                         <button
                           type="button"

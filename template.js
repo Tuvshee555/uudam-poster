@@ -89,13 +89,13 @@ function dayRow(d) {
           <div class="dmain">
             <div class="dsummary prose">${summary}</div>
             ${hotel}
+            <div class="mealgrid">
+              <div class="mealcard ${d.meals?.breakfast ? "yes" : "no"}"><span class="mealname">Өглөөний цай</span><span class="mealstate">${d.meals?.breakfast ? "Багтсан" : "Багтаагүй"}</span></div>
+              <div class="mealcard ${d.meals?.lunch ? "yes" : "no"}"><span class="mealname">Өдрийн хоол</span><span class="mealstate">${d.meals?.lunch ? "Багтсан" : "Багтаагүй"}</span></div>
+              <div class="mealcard ${d.meals?.dinner ? "yes" : "no"}"><span class="mealname">Оройн хоол</span><span class="mealstate">${d.meals?.dinner ? "Багтсан" : "Багтаагүй"}</span></div>
+            </div>
           </div>
           <div class="dside">
-            <div class="mealgrid">
-              <div class="mealcard ${d.meals?.breakfast ? "yes" : "no"}"><span>Өглөө</span><span>${d.meals?.breakfast ? "Багтсан" : "Багтаагүй"}</span></div>
-              <div class="mealcard ${d.meals?.lunch ? "yes" : "no"}"><span>Өдөр</span><span>${d.meals?.lunch ? "Багтсан" : "Багтаагүй"}</span></div>
-              <div class="mealcard ${d.meals?.dinner ? "yes" : "no"}"><span>Орой</span><span>${d.meals?.dinner ? "Багтсан" : "Багтаагүй"}</span></div>
-            </div>
             ${photo}
           </div>
         </div>
@@ -146,19 +146,22 @@ function buildHTML(t) {
     .days:before{content:"";position:absolute;left:22px;top:24px;bottom:60px;width:1px;background:${LINE}}
     .dayrow{display:grid;grid-template-columns:46px 1fr;gap:18px;padding:10px 0}
     .dnum{width:44px;height:44px;border-radius:50%;background:${NAVY};color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;position:relative;z-index:1}
-    .daycard{border:1px solid ${LINE};border-radius:12px;padding:20px 24px;background:#fff;border-left:3px solid ${GOLD}}
-    .droute{font-size:19px;font-weight:900;color:${NAVY};display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .daycard{border:1px solid ${LINE};border-radius:12px;padding:20px 0 20px 24px;background:#fff;border-left:3px solid ${GOLD};overflow:hidden}
+    .droute{font-size:19px;font-weight:900;color:${NAVY};display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-right:24px}
     .droute .km,.droute .flt{font-size:11px;padding:3px 8px;border-radius:999px;background:#f4f7fb;font-weight:700;color:${MUTED}}
     .droute .flt{color:${NAVY_SOFT}}
-    .daycontent{display:grid;grid-template-columns:minmax(0,1.7fr) 210px;gap:24px;align-items:start;margin-top:14px}
-    .dsummary.prose{font-size:16px;line-height:1.8;color:#2c3e50}
-    .dhotel{margin-top:12px;color:${MUTED};font-size:13px;line-height:1.4}
-    .dside{display:flex;flex-direction:column;gap:10px}
-    .mealgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-    .mealcard{display:flex;flex-direction:column;gap:3px;align-items:center;padding:8px 4px;border-radius:8px;border:1px solid ${LINE};font-size:10px;font-weight:700}
+    .daycontent{display:grid;grid-template-columns:minmax(0,3fr) 2fr;gap:0;align-items:stretch;margin-top:14px}
+    .dmain{min-width:0;padding-right:20px;display:flex;flex-direction:column;gap:0}
+    .dsummary.prose{font-size:15px;line-height:1.8;color:#2c3e50;flex:1}
+    .dhotel{margin-top:10px;color:${MUTED};font-size:13px;line-height:1.4}
+    .dside{display:flex;flex-direction:column}
+    .mealgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:14px}
+    .mealcard{display:flex;flex-direction:row;gap:6px;align-items:center;justify-content:flex-start;padding:7px 10px;border-radius:8px;border:1px solid ${LINE};font-size:11px;font-weight:700;text-align:left}
     .mealcard.yes{background:#f0faf4;color:#1a7a4a;border-color:#b8e2c8}
     .mealcard.no{background:#fdf4f4;color:#a04040;border-color:#e8c8c8}
-    .dphoto{min-height:160px;border-radius:10px;border:1px solid ${LINE};background-size:cover;background-position:center}
+    .mealname{font-size:11px;font-weight:700}
+    .mealstate{font-size:10px;font-weight:600;opacity:.75}
+    .dphoto{width:100%;height:100%;min-height:200px;border-radius:0 10px 10px 0;background-size:cover;background-position:center}
     .endpad{height:32px}
   </style></head><body>
     <div class="page" id="p1">
