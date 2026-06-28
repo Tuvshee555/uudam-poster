@@ -144,7 +144,11 @@ body.exporting .page .pwhen-input{background:transparent !important}
 .page .droute .km,.page .droute .flt{font-size:11px;padding:3px 8px;border-radius:999px;background:var(--tint);font-weight:700;color:var(--muted)}
 .page .droute .flt{color:var(--navy-soft)}
 .page .dmain{min-width:0;padding:20px 20px 20px 24px;display:flex;flex-direction:column}
-.page .dsummary.prose{font-size:15px;line-height:1.8;color:#2c3e50;padding:0;border:none;background:transparent;min-height:0;box-shadow:none !important;flex:1}
+.page .dsummary.prose{font-size:15px;line-height:1.7;color:#2c3e50;padding:0 0 0 18px;border:none;background:transparent;min-height:0;box-shadow:none !important;flex:1;list-style:disc;list-style-position:outside;margin:0}
+.page .dsummary.prose li{margin-bottom:6px;outline:none}
+.page .dsummary.prose li:last-child{margin-bottom:0}
+.page .dsummary.prose li:empty:before{content:attr(data-placeholder);color:#9aaaba;font-style:italic;font-weight:400}
+body.exporting .page .dsummary.prose li:empty{display:none !important}
 .page .dhotel{margin-top:10px;color:var(--muted);font-size:13px;line-height:1.4}
 
 /* Meal badges — under text in left column */

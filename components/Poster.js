@@ -45,6 +45,46 @@ function buildNarrative(day) {
   return String(day.summary || "").trim();
 }
 
+function splitSummary(text) {
+  const t = String(text || "").trim();
+  if (!t) return [];
+  // If the user already structured the text with line breaks, respect those groupings.
+  if (t.includes("\n")) return t.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+  // Otherwise break the wall-of-text into one bullet per sentence.
+  return t.split(/(?<=[.])\s+/).map((s) => s.trim()).filter(Boolean);
+}
+
+function BulletEd({ value, onChange, className, placeholder }) {
+  const listRef = useRef(null);
+  const bullets = splitSummary(value);
+
+  const emit = () => {
+    if (!listRef.current) return;
+    const items = Array.from(listRef.current.querySelectorAll("li"));
+    const joined = items
+      .map((li) => li.innerText.replace(/\n+/g, " ").trim())
+      .filter(Boolean)
+      .join("\n");
+    if (joined !== value) onChange(joined);
+  };
+
+  return (
+    <ul
+      ref={listRef}
+      className={className}
+      contentEditable
+      suppressContentEditableWarning
+      onBlur={emit}
+    >
+      {bullets.length ? (
+        bullets.map((s, i) => <li key={i}>{s}</li>)
+      ) : (
+        <li data-placeholder={placeholder || ""} />
+      )}
+    </ul>
+  );
+}
+
 function getPriceTable(trip) {
   if (trip.price_table) return trip.price_table;
   if (!Array.isArray(trip.prices) || trip.prices.length === 0) return null;
@@ -238,8 +278,7 @@ export default function Poster({
                       {cleanText(d.flight) ? <span className="flt">✈ {cleanText(d.flight)}</span> : null}
                     </div>
 
-                    <Ed
-                      as="div"
+                    <BulletEd
                       className="dsummary prose"
                       value={narrative}
                       placeholder="Энэ өдрийн аяллын тайлбар энд харагдана."
@@ -252,22 +291,24 @@ export default function Poster({
                       </div>
                     ) : null}
 
-                    <div className="mealgrid">
-                      {MEAL_LABELS.map(([k, label]) => {
-                        const on = d.meals?.[k];
-                        return (
-                          <button
-                            key={k}
-                            type="button"
-                            className={"mealcard " + (on ? "yes" : "no")}
-                            onClick={() => upd(["days", i, "meals", k], !on)}
-                          >
-                            <span className="mealname">{label}</span>
-                            <span className="mealstate">{on ? "Багтсан" : "Багтаагүй"}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    {d.show_meals !== false ? (
+                      <div className="mealgrid">
+                        {MEAL_LABELS.map(([k, label]) => {
+                          const on = d.meals?.[k];
+                          return (
+                            <button
+                              key={k}
+                              type="button"
+                              className={"mealcard " + (on ? "yes" : "no")}
+                              onClick={() => upd(["days", i, "meals", k], !on)}
+                            >
+                              <span className="mealname">{label}</span>
+                              <span className="mealstate">{on ? "Багтсан" : "Багтаагүй"}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="dside">
@@ -312,6 +353,13 @@ export default function Poster({
                         )}
                         <button type="button" className="addbtn" onClick={() => insertDay(i)}>
                           + Дараа өдөр
+                        </button>
+                        <button
+                          type="button"
+                          className="addbtn"
+                          onClick={() => upd(["days", i, "show_meals"], d.show_meals === false)}
+                        >
+                          {d.show_meals === false ? "🍽 Хоол харуулах" : "🍽 Хоол нуух"}
                         </button>
                       </div>
                   </div>
