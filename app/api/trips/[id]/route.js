@@ -12,3 +12,14 @@ export async function GET(_req, { params }) {
     return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
   }
 }
+
+export async function DELETE(_req, { params }) {
+  try {
+    await sql`delete from trip_versions where trip_id=${params.id}`;
+    const rows = await sql`delete from trips where id=${params.id} returning id`;
+    if (!rows.length) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
+  }
+}

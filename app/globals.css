@@ -61,8 +61,14 @@ button,input,textarea{font:inherit}
 
 .sidebar h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px}
 .hist{display:flex;flex-direction:column;gap:6px}
-.hist button{text-align:left;border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 11px;cursor:pointer;font-size:13px}
-.hist button:hover{border-color:var(--navy)}
+.hist-item{position:relative;border:1px solid var(--line);background:#fff;border-radius:9px;overflow:hidden}
+.hist-item:hover{border-color:var(--navy)}
+.hist-num{position:absolute;top:10px;left:10px;min-width:20px;height:20px;border-radius:999px;background:#eef4fb;color:var(--navy);font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.hist-open{text-align:left;border:0;background:transparent;width:100%;padding:9px 38px 9px 38px;cursor:pointer;font-size:13px}
+.hist-delete{position:absolute;top:7px;right:7px;width:22px;height:22px;border:1px solid #d9e1ea;background:#fff;color:var(--danger);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;cursor:pointer;opacity:0;transition:opacity .12s,border-color .12s,background .12s}
+.hist-item:hover .hist-delete,.hist-delete:focus{opacity:1}
+.hist-delete:hover{border-color:var(--danger);background:#fff5f4}
+.hist-delete:disabled{opacity:.4;cursor:default}
 .hist .t{font-weight:700;color:var(--navy)}
 .hist .d{color:var(--muted);font-size:11px}
 

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { fileToText } from "../../../lib/parse";
+import { fileToImages, fileToText } from "../../../lib/parse";
 import { extractTrip, extractTripFromImage, extractTripFromPdf } from "../../../lib/openai";
 import { extractTripFromPdfGemini } from "../../../lib/gemini";
 import { extractPdfImages } from "../../../lib/pdfImages";
+import { applyDayText, applyMealMarks, extractPdfFacts } from "../../../lib/pdfMeals";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -10,14 +11,22 @@ export const maxDuration = 60;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
 const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
 
-// Cap images per day to avoid cycling 20 photos for 9 days
-const MAX_PDF_IMAGES = 9;
+const MAX_EXTRACTED_IMAGES = 18;
 
-function assignPhotos(trip, pdfImages) {
-  if (!pdfImages?.length) return;
-  const capped = pdfImages.slice(0, MAX_PDF_IMAGES);
-  for (let i = 0; i < trip.days.length; i++) {
-    trip.days[i].photo = capped[i % capped.length];
+function assignPhotos(trip, extractedImages) {
+  if (!trip?.days?.length || !extractedImages?.length) return;
+  const images = extractedImages.slice(0, MAX_EXTRACTED_IMAGES);
+  const dayCount = trip.days.length;
+  const imageCount = images.length;
+
+  for (let dayIndex = 0; dayIndex < dayCount; dayIndex++) {
+    const imageIndex =
+      imageCount <= dayCount
+        ? dayIndex
+        : Math.round((dayIndex * (imageCount - 1)) / (dayCount - 1 || 1));
+    if (images[imageIndex]) {
+      trip.days[dayIndex].photo = images[imageIndex];
+    }
   }
 }
 
@@ -58,10 +67,13 @@ export async function POST(req) {
 
     if (name.endsWith(".pdf") || mime === "application/pdf") {
       const b64 = buffer.toString("base64");
-      const [trip, pdfImages] = await Promise.all([
+      const [trip, pdfImages, pdfFacts] = await Promise.all([
         extractPdfTrip(b64, file.name),
         extractPdfImages(buffer),
+        extractPdfFacts(buffer),
       ]);
+      applyDayText(trip, pdfFacts.days);
+      applyMealMarks(trip, pdfFacts.meals);
       assignPhotos(trip, pdfImages);
       return NextResponse.json({ trip, source_file: file.name });
     }
@@ -71,7 +83,11 @@ export async function POST(req) {
     if (!text || text.trim().length < 20) {
       return NextResponse.json({ error: "Could not read text from this file." }, { status: 422 });
     }
-    const trip = await extractTrip(text);
+    const [trip, fileImages] = await Promise.all([
+      extractTrip(text),
+      fileToImages(buffer, file.name),
+    ]);
+    assignPhotos(trip, fileImages);
     return NextResponse.json({ trip, source_file: file.name });
   } catch (e) {
     console.error("extract failed:", e);

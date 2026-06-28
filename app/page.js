@@ -718,6 +718,24 @@ export default function Home() {
     }
   }
 
+  async function deleteTrip(id) {
+    const previousHistory = history;
+    setHistory((items) => items.filter((item) => item.id !== id));
+    if (tripId === id) {
+      setTrip(null);
+      setTripId(null);
+      setSource("");
+    }
+
+    try {
+      const r = await fetch(`/api/trips/${id}`, { method: "DELETE" }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+    } catch (e) {
+      setHistory(previousHistory);
+      setError(String(e.message || e));
+    }
+  }
+
   return (
     <>
       {busy && (
@@ -847,11 +865,23 @@ export default function Home() {
             <h3>Түүх</h3>
             <div className="hist">
               {history.length === 0 && <div className="note">Хадгалсан постер алга</div>}
-              {history.map((h) => (
-                <button key={h.id} onClick={() => openTrip(h.id)}>
-                  <div className="t">{h.title}</div>
-                  <div className="d">{new Date(h.updated_at).toLocaleString()}</div>
-                </button>
+              {history.map((h, index) => (
+                <div className="hist-item" key={h.id}>
+                  <div className="hist-num">{index + 1}</div>
+                  <button type="button" className="hist-open" onClick={() => openTrip(h.id)}>
+                    <div className="t">{h.title}</div>
+                    <div className="d">{new Date(h.updated_at).toLocaleString()}</div>
+                  </button>
+                  <button
+                    type="button"
+                    className="hist-delete"
+                    title="Постер устгах"
+                    onClick={() => deleteTrip(h.id)}
+                    disabled={!!busy}
+                  >
+                    ×
+                  </button>
+                </div>
               ))}
             </div>
           </div>
