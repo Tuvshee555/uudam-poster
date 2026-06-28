@@ -6,6 +6,9 @@ import { createDefaultTrip } from "../lib/defaultTrip";
 
 const POSTER_WIDTH = 1080;
 const MESSENGER_SINGLE_IMAGE_MAX_HEIGHT = 1900;
+const MAX_UPLOAD_FILES = 10;
+const MAX_UPLOAD_SIZE_MB = 100;
+const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
 
 function setPath(obj, path, value) {
   const clone = structuredClone(obj);
@@ -255,6 +258,13 @@ export default function Home() {
     loadHistory();
   }, []);
 
+  async function sha256File(file) {
+    const buf = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest("SHA-256", buf);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
   async function extractOne(file) {
     const fd = new FormData();
     fd.append("file", file);
@@ -277,16 +287,47 @@ export default function Home() {
   async function handleFiles(files) {
     if (!files || files.length === 0) return;
     setError("");
-    const fileList = Array.from(files).filter((f) => f instanceof File);
+    let fileList = Array.from(files).filter((f) => f instanceof File);
+    const droppedCount = fileList.length;
+    const warnings = [];
+
+    if (droppedCount > MAX_UPLOAD_FILES) {
+      warnings.push(`Зөвхөн эхний ${MAX_UPLOAD_FILES} файлыг боловсруулна (${droppedCount} файлаас).`);
+      fileList = fileList.slice(0, MAX_UPLOAD_FILES);
+    }
+
+    const tooBig = fileList.filter((f) => f.size > MAX_UPLOAD_SIZE_BYTES);
+    if (tooBig.length > 0) {
+      warnings.push(`${tooBig.map((f) => f.name).join(", ")} файл ${MAX_UPLOAD_SIZE_MB}MB-с том тул алгаслаа.`);
+      fileList = fileList.filter((f) => f.size <= MAX_UPLOAD_SIZE_BYTES);
+    }
+
+    if (fileList.length === 0) {
+      setError(warnings.join(" "));
+      return;
+    }
+
+    const seen = new Set();
+    const uniqueFiles = [];
+    for (const file of fileList) {
+      const hash = await sha256File(file);
+      if (seen.has(hash)) {
+        warnings.push(`${file.name} нөгөө файлтай ижиг агуулгатай байсан тул алгаслаа.`);
+      } else {
+        seen.add(hash);
+        uniqueFiles.push(file);
+      }
+    }
+
     const saved = [];
     const failed = [];
 
-    for (let i = 0; i < fileList.length; i++) {
-      const file = fileList[i];
-      setBusy(`${fileList.length} файлаас ${i + 1}-г уншиж байна: ${file.name}…`);
+    for (let i = 0; i < uniqueFiles.length; i++) {
+      const file = uniqueFiles[i];
+      setBusy(`${uniqueFiles.length} файлаас ${i + 1}-г уншиж байна: ${file.name}…`);
       try {
         const { trip, source_file } = await extractOne(file);
-        setBusy(`${fileList.length} файлаас ${i + 1}-г хадгалж байна: ${file.name}…`);
+        setBusy(`${uniqueFiles.length} файлаас ${i + 1}-г хадгалж байна: ${file.name}…`);
         const { id } = await saveTripData(trip, source_file || file.name);
         saved.push({ file: file.name, trip, id });
       } catch (e) {
@@ -305,9 +346,11 @@ export default function Home() {
     await loadHistory();
     setBusy("");
 
+    const messages = [...warnings];
     if (failed.length > 0) {
-      setError(`${failed.length} файл уншихад алдаа гарлаа: ${failed.map((f) => f.file).join(", ")}`);
+      messages.push(`${failed.length} файл уншихад алдаа гарлаа: ${failed.map((f) => f.file).join(", ")}`);
     }
+    if (messages.length > 0) setError(messages.join(" "));
   }
 
   async function capture(node) {
@@ -640,7 +683,7 @@ export default function Home() {
               />
               <div className="ic">⬆</div>
               <div className="dt">Файл эсвэл зураг энд чирж тавь</div>
-              <div className="ds">Олон файлыг нэг дор сонгох боломжтой · Word (.docx), PDF, .txt · JPG, PNG, WEBP зураг</div>
+              <div className="ds">{`Дээд тал нь ${MAX_UPLOAD_FILES} файл · тус бүр ${MAX_UPLOAD_SIZE_MB}MB хүртэл · Word (.docx), PDF, .txt · JPG, PNG, WEBP зураг`}</div>
             </label>
             {busy && <div className="note" style={{ marginTop: 14, textAlign: "center" }}>⏳ {busy}</div>}
             {error && <div className="err" style={{ textAlign: "center" }}>⚠ {error}</div>}

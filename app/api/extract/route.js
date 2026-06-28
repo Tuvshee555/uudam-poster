@@ -8,6 +8,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/bmp"];
+const MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024;
 
 // Cap images per day to avoid cycling 20 photos for 9 days
 const MAX_PDF_IMAGES = 9;
@@ -41,6 +42,9 @@ export async function POST(req) {
     const form = await req.formData();
     const file = form.get("file");
     if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      return NextResponse.json({ error: "File too large. Max 100MB." }, { status: 413 });
+    }
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const name = file.name.toLowerCase();
