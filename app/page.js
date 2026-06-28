@@ -6,6 +6,7 @@ import { createDefaultTrip } from "../lib/defaultTrip";
 
 const POSTER_WIDTH = 1080;
 const MESSENGER_SINGLE_IMAGE_MAX_HEIGHT = 1900;
+const MESSENGER_MAX_IMAGE_SLICES = 3;
 const MAX_UPLOAD_FILES = 10;
 const MAX_UPLOAD_SIZE_MB = 100;
 const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
@@ -427,6 +428,32 @@ export default function Home() {
     );
   }
 
+  function chooseMessengerSplitPoints(node, sliceCount) {
+    if (sliceCount <= 1) return [];
+    if (sliceCount === 2) return [chooseMessengerSplitPoint(node)];
+
+    const totalHeight = node.offsetHeight;
+    const candidates = [];
+    node.querySelectorAll(".dayrow,.program-head,.sec.compact-sec,.foot").forEach((el) => {
+      const top = getRelativeTop(el, node);
+      if (top > totalHeight * 0.18 && top < totalHeight * 0.88) candidates.push(top);
+    });
+
+    const points = [];
+    for (let i = 1; i < sliceCount; i++) {
+      const target = (totalHeight * i) / sliceCount;
+      const minGap = totalHeight * 0.18;
+      const eligible = candidates.filter((point) => points.every((existing) => Math.abs(existing - point) > minGap));
+      const best = (eligible.length ? eligible : candidates).reduce((currentBest, current) =>
+        Math.abs(current - target) < Math.abs(currentBest - target) ? current : currentBest,
+        target
+      );
+      points.push(best);
+    }
+
+    return points.sort((a, b) => a - b).map(Math.round);
+  }
+
   function drawMessengerBadge(ctx, width, height, index, total) {
     const label = `${index + 1}/${total}`;
     const badgeWidth = 120;
@@ -459,14 +486,12 @@ export default function Home() {
     });
 
     const totalHeight = node.offsetHeight;
-    const shouldSplit = totalHeight > MESSENGER_SINGLE_IMAGE_MAX_HEIGHT;
-    const splitY = shouldSplit ? chooseMessengerSplitPoint(node) : totalHeight;
-    const ranges = shouldSplit
-      ? [
-          [0, splitY],
-          [splitY, totalHeight],
-        ]
-      : [[0, totalHeight]];
+    const sliceCount = Math.min(
+      MESSENGER_MAX_IMAGE_SLICES,
+      Math.max(1, Math.ceil(totalHeight / MESSENGER_SINGLE_IMAGE_MAX_HEIGHT))
+    );
+    const splitPoints = chooseMessengerSplitPoints(node, sliceCount);
+    const ranges = [0, ...splitPoints, totalHeight].map((startY, index, points) => [startY, points[index + 1]]).filter((range) => range[1]);
     const scaleY = fullImage.height / totalHeight;
 
     return ranges.map(([startY, endY], index) => {
@@ -733,7 +758,7 @@ export default function Home() {
                 <button className="btn ghost" onClick={downloadSplitImages} disabled={!!busy}>💬 Messenger Split</button>
                 <button className="btn ghost" onClick={downloadSplitZip} disabled={!!busy}>🗜 Messenger ZIP</button>
                 <span className="note" style={{ alignSelf: "center" }}>
-                  Бичвэр дээр дарж засаарай · хоолны таглыг дарж асаах/унтраах · Messenger split: main poster-оос 1-2 зураг
+                  Бичвэр дээр дарж засаарай · хоолны таглыг дарж асаах/унтраах · Messenger split: main poster-оос 1-2 зураг, хэт урт бол 3
                 </span>
               </div>
 

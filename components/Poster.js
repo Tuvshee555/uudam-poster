@@ -85,8 +85,97 @@ function BulletEd({ value, onChange, className, placeholder }) {
   );
 }
 
+function tableFromPriceNote(note) {
+  const text = String(note || "").replace(/^⚠\s*/, "").trim();
+  if (!text) return null;
+
+  const matches = [...text.matchAll(/(\d[\d\s,'’]*\d)\s*₮/g)];
+  if (matches.length < 2) return null;
+
+  let cursor = 0;
+  const columns = [];
+  const cells = [];
+  let consumedEnd = 0;
+
+  for (const match of matches) {
+    const rawLabel = text
+      .slice(cursor, match.index)
+      .replace(/[—–:;,]+$/g, "")
+      .trim();
+    const isExplanation = /өрөөнд|ганцаараа|тусгай|нэмж|орох бол/i.test(rawLabel);
+    if (isExplanation && columns.length === 0) return null;
+    if (isExplanation && columns.length >= 2) break;
+
+    const label = rawLabel || `Үнэ ${columns.length + 1}`;
+    const amount = `${match[1].replace(/[’']/g, ",").replace(/\s+/g, "")}₮`;
+
+    let end = match.index + match[0].length;
+    const paren = text.slice(end).match(/^\s*(\([^)]*\))/);
+    columns.push(paren ? `${label} ${paren[1]}` : label);
+    cells.push(amount);
+
+    if (paren) end += paren[0].length;
+    cursor = end;
+    consumedEnd = end;
+  }
+
+  if (columns.length < 2) return null;
+
+  return {
+    columns,
+    rows: [{ dates: "Үнэ", cells }],
+    note: text.slice(consumedEnd).replace(/^[\s—–:;,]+/, "").trim(),
+    priceText: text.slice(0, consumedEnd).trim(),
+    fromPriceNote: true,
+  };
+}
+
+function splitPriceNotes(text) {
+  const cleaned = String(text || "")
+    .replace(/^⚠\s*/, "")
+    .split(/\n+/)
+    .map((line) => line.replace(/^[•\-]\s*/, "").trim())
+    .filter(Boolean);
+
+  if (cleaned.length <= 1) return cleaned;
+
+  const boxes = [];
+  let current = null;
+
+  for (const line of cleaned) {
+    const isHeading = /хямдрал|урамшуулал|санал|бэлэг|хөтөлбөр/i.test(line) && /[:：]$/.test(line);
+    if (isHeading || !current) {
+      current = { title: isHeading ? line.replace(/[:：]$/, "") : "", items: isHeading ? [] : [line] };
+      boxes.push(current);
+    } else {
+      current.items.push(line);
+    }
+  }
+
+  return boxes.map((box) => (box.title ? `${box.title}:\n${box.items.join("\n")}` : box.items.join("\n")));
+}
+
+function getPriceNoteBoxes(trip, priceTable) {
+  if (priceTable?.fromPriceNote) return splitPriceNotes(priceTable.note);
+  return splitPriceNotes(trip.price_note);
+}
+
+function removePriceNoteBox(trip, priceTable, boxText, upd) {
+  if (priceTable?.fromPriceNote) {
+    const remaining = splitPriceNotes(priceTable.note).filter((note) => note !== boxText).join("\n");
+    const next = [priceTable.priceText, remaining].filter(Boolean).join(" ");
+    upd(["price_note"], next);
+    return;
+  }
+
+  const remaining = splitPriceNotes(trip.price_note).filter((note) => note !== boxText).join("\n");
+  upd(["price_note"], remaining);
+}
+
 function getPriceTable(trip) {
   if (trip.price_table) return trip.price_table;
+  const noteTable = tableFromPriceNote(trip.price_note);
+  if (noteTable) return noteTable;
   if (!Array.isArray(trip.prices) || trip.prices.length === 0) return null;
 
   return {
@@ -118,6 +207,7 @@ export default function Poster({
   dayPhotoInputRefs,
 }) {
   const priceTable = getPriceTable(t);
+  const priceNoteBoxes = getPriceNoteBoxes(t, priceTable);
   const dragIdx = useRef(null);
   const [dragOver, setDragOver] = useState(null);
 
@@ -217,14 +307,35 @@ export default function Poster({
             ) : null}
             </>
             ) : null}
-            {priceTable?.note && !t.price_table ? <div className="pnote">{priceTable.note}</div> : null}
-            {t.price_note ? (
-            <Ed
-              as="div"
-              className="pnote"
-              value={"⚠ " + t.price_note}
-              onChange={(v) => upd(["price_note"], v.replace(/^⚠\s*/, ""))}
-            />
+            {priceNoteBoxes.length ? (
+              <div className="price-note-boxes">
+                {priceNoteBoxes.map((note, ni) => {
+                  const lines = note.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+                  const title = lines.length > 1 && /[:：]$/.test(lines[0]) ? lines[0].replace(/[:：]$/, "") : "";
+                  const items = title ? lines.slice(1) : lines;
+
+                  return (
+                    <div className="price-note-box" key={`${note}-${ni}`}>
+                      <button
+                        type="button"
+                        className="editor-only price-note-remove"
+                        onClick={() => removePriceNoteBox(t, priceTable, note, upd)}
+                        title="Тайлбар устгах"
+                      >
+                        ×
+                      </button>
+                      {title ? <div className="price-note-title">{title}</div> : null}
+                      {items.length > 1 ? (
+                        <ul>
+                          {items.map((item, ii) => <li key={ii}>{item}</li>)}
+                        </ul>
+                      ) : (
+                        <div className="price-note-line">⚠ {items[0]}</div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             ) : null}
             {/* Description box — always in editor, hidden on export if empty via CSS */}
             <Ed

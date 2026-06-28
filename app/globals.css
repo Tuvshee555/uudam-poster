@@ -119,6 +119,14 @@ body.exporting .page .pwhen-input{background:transparent !important}
 .page .price-desc-input{width:100%;min-height:36px;padding:8px 10px;border-radius:8px;border:1px dashed #b9c6d8;font-size:14px;line-height:1.7;color:var(--ink);outline:none;resize:none;font-family:inherit;background:#fff}
 .page .price-desc-input:focus{border-color:var(--navy);border-style:solid}
 .page .pnote{margin-top:8px;color:var(--muted);font-size:13px;font-style:italic}
+.page .price-note-boxes{display:grid;gap:8px;margin-top:10px}
+.page .price-note-box{position:relative;border:1px solid #d9e6f2;border-left:4px solid var(--gold);border-radius:8px;background:#fbfdff;padding:10px 38px 10px 12px;color:#27415d;font-size:13px;line-height:1.55}
+.page .price-note-title{font-weight:900;color:var(--navy);margin-bottom:4px}
+.page .price-note-box ul{margin:0;padding-left:18px}
+.page .price-note-box li{margin:2px 0}
+.page .price-note-line{font-style:italic;color:#586879}
+.page .price-note-remove{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:1px solid #d8e4f0;background:#fff;color:var(--danger);font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.page .price-note-remove:hover{border-color:var(--danger);background:#fff5f4}
 
 /* Program header */
 .page .program-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:36px 0 12px;padding-top:24px;border-top:1px solid var(--line)}
