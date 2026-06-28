@@ -5,6 +5,7 @@ import Poster from "../components/Poster";
 import { createDefaultTrip } from "../lib/defaultTrip";
 
 const POSTER_WIDTH = 1080;
+const MESSENGER_SINGLE_IMAGE_MAX_HEIGHT = 1900;
 
 function setPath(obj, path, value) {
   const clone = structuredClone(obj);
@@ -315,6 +316,151 @@ export default function Home() {
     }
   }
 
+  function buildExportBaseName() {
+    return (trip?.title || "poster")
+      .slice(0, 40)
+      .replace(/[\\/:*?"<>|]/g, "")
+      .trim() || "poster";
+  }
+
+  function getRelativeTop(node, container) {
+    return node.getBoundingClientRect().top - container.getBoundingClientRect().top;
+  }
+
+  function chooseMessengerSplitPoint(node) {
+    const totalHeight = node.offsetHeight;
+    const target = totalHeight / 2;
+    const minY = totalHeight * 0.38;
+    const maxY = totalHeight * 0.72;
+    const candidates = [];
+
+    node.querySelectorAll(".dayrow,.program-head,.sec.compact-sec,.foot").forEach((el) => {
+      const top = getRelativeTop(el, node);
+      if (top > minY && top < maxY) candidates.push(top);
+    });
+
+    if (!candidates.length) return Math.round(target);
+
+    return Math.round(
+      candidates.reduce((best, current) =>
+        Math.abs(current - target) < Math.abs(best - target) ? current : best
+      )
+    );
+  }
+
+  function drawMessengerBadge(ctx, width, height, index, total) {
+    const label = `${index + 1}/${total}`;
+    const badgeWidth = 120;
+    const badgeHeight = 56;
+    const x = width - badgeWidth - 28;
+    const y = height - badgeHeight - 28;
+
+    ctx.fillStyle = "rgba(17, 62, 103, 0.88)";
+    ctx.beginPath();
+    ctx.roundRect(x, y, badgeWidth, badgeHeight, 18);
+    ctx.fill();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 30px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, x + badgeWidth / 2, y + badgeHeight / 2 + 1);
+  }
+
+  async function captureMessengerSlices() {
+    const node = page1Ref.current;
+    if (!node) return [];
+
+    const fullUrl = await capture(node);
+    const fullImage = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = fullUrl;
+    });
+
+    const totalHeight = node.offsetHeight;
+    const shouldSplit = totalHeight > MESSENGER_SINGLE_IMAGE_MAX_HEIGHT;
+    const splitY = shouldSplit ? chooseMessengerSplitPoint(node) : totalHeight;
+    const ranges = shouldSplit
+      ? [
+          [0, splitY],
+          [splitY, totalHeight],
+        ]
+      : [[0, totalHeight]];
+    const scaleY = fullImage.height / totalHeight;
+
+    return ranges.map(([startY, endY], index) => {
+      const sourceY = Math.round(startY * scaleY);
+      const sourceHeight = Math.round((endY - startY) * scaleY);
+      const canvas = document.createElement("canvas");
+      canvas.width = fullImage.width;
+      canvas.height = sourceHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(fullImage, 0, sourceY, fullImage.width, sourceHeight, 0, 0, canvas.width, canvas.height);
+      drawMessengerBadge(ctx, canvas.width, canvas.height, index, ranges.length);
+
+      return {
+        index,
+        url: canvas.toDataURL("image/png"),
+      };
+    });
+  }
+
+  async function downloadSplitImages() {
+    setBusy("Messenger зурагнуудыг бэлдэж байна…");
+    try {
+      await withExportMode(async () => {
+        const captures = await captureMessengerSlices();
+        const baseName = buildExportBaseName();
+
+        for (const item of captures) {
+          const a = document.createElement("a");
+          a.href = item.url;
+          a.download = `${baseName}-messenger-${item.index + 1}.png`;
+          a.click();
+        }
+      });
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setBusy("");
+    }
+  }
+
+  async function downloadSplitZip() {
+    setBusy("ZIP файл бэлдэж байна…");
+    try {
+      await withExportMode(async () => {
+        const captures = await captureMessengerSlices();
+        const JSZip = (await import("jszip")).default;
+        const zip = new JSZip();
+        const baseName = buildExportBaseName();
+
+        await Promise.all(
+          captures.map(async (item) => {
+            const blob = await fetch(item.url).then((response) => response.blob());
+            zip.file(`${baseName}-messenger-${item.index + 1}.png`, blob);
+          })
+        );
+
+        const blob = await zip.generateAsync({ type: "blob" });
+        const zipUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = zipUrl;
+        a.download = `${baseName}-messenger-split.zip`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
+      });
+    } catch (e) {
+      setError(String(e.message || e));
+    } finally {
+      setBusy("");
+    }
+  }
+
   async function downloadPng() {
     setBusy("Зураг бэлдэж байна…");
     try {
@@ -571,6 +717,8 @@ export default function Home() {
                 <button className="btn ghost" onClick={downloadPng} disabled={!!busy}>🖼 PNG (нэг poster)</button>
                 <button className="btn ghost" onClick={downloadOneImage} disabled={!!busy}>🧩 Нэг зураг (бүгд)</button>
                 <button className="btn ghost" onClick={downloadPdf} disabled={!!busy}>📑 PDF</button>
+                <button className="btn ghost" onClick={downloadSplitImages} disabled={!!busy}>💬 Messenger Split</button>
+                <button className="btn ghost" onClick={downloadSplitZip} disabled={!!busy}>🗜 Messenger ZIP</button>
                 <input
                   ref={heroInputRef}
                   type="file"
@@ -579,7 +727,7 @@ export default function Home() {
                   onChange={(e) => onHeroFile(e.target.files[0])}
                 />
                 <span className="note" style={{ alignSelf: "center" }}>
-                  Бичвэр дээр дарж засаарай · хоолны таглыг дарж асаах/унтраах
+                  Бичвэр дээр дарж засаарай · хоолны таглыг дарж асаах/унтраах · Messenger split: main poster-оос 1-2 зураг
                 </span>
               </div>
 
