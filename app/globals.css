@@ -121,6 +121,9 @@ body.exporting .page .pwhen-input{background:transparent !important}
 .page .pnote{margin-top:8px;color:var(--muted);font-size:13px;font-style:italic}
 .page .price-note-boxes{display:grid;gap:8px;margin-top:10px}
 .page .price-note-box{position:relative;border:1px solid #d9e6f2;border-left:4px solid var(--gold);border-radius:8px;background:#fbfdff;padding:10px 38px 10px 12px;color:#27415d;font-size:13px;line-height:1.55}
+.page .price-note-content{outline:none;border-radius:6px}
+.page .price-note-content:hover{box-shadow:0 0 0 2px #cfe0f1 inset}
+.page .price-note-content:focus{box-shadow:0 0 0 2px var(--navy) inset;background:#fff}
 .page .price-note-title{font-weight:900;color:var(--navy);margin-bottom:4px}
 .page .price-note-box ul{margin:0;padding-left:18px}
 .page .price-note-box li{margin:2px 0}

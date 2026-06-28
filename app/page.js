@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import * as htmlToImage from "html-to-image";
 import Poster from "../components/Poster";
 import { createDefaultTrip } from "../lib/defaultTrip";
 
@@ -35,6 +36,50 @@ function resizeImage(file, maxW = 1500) {
   });
 }
 
+function tableFromPriceNote(note) {
+  const text = String(note || "").replace(/^⚠\s*/, "").trim();
+  if (!text) return null;
+
+  const matches = [...text.matchAll(/(\d[\d\s,'’]*\d)\s*₮/g)];
+  if (matches.length < 2) return null;
+
+  let cursor = 0;
+  const columns = [];
+  const cells = [];
+  let consumedEnd = 0;
+
+  for (const match of matches) {
+    const rawLabel = text
+      .slice(cursor, match.index)
+      .replace(/[—–:;,]+$/g, "")
+      .trim();
+    const isExplanation = /өрөөнд|ганцаараа|тусгай|нэмж|орох бол/i.test(rawLabel);
+    if (isExplanation && columns.length === 0) return null;
+    if (isExplanation && columns.length >= 2) break;
+
+    const label = rawLabel || `Үнэ ${columns.length + 1}`;
+    const amount = `${match[1].replace(/[’']/g, ",").replace(/\s+/g, "")}₮`;
+    const paren = text.slice(match.index + match[0].length).match(/^\s*(\([^)]*\))/);
+    const end = match.index + match[0].length + (paren ? paren[0].length : 0);
+
+    columns.push(paren ? `${label} ${paren[1]}` : label);
+    cells.push(amount);
+    cursor = end;
+    consumedEnd = end;
+  }
+
+  if (columns.length < 2) return null;
+
+  return {
+    priceTable: {
+      columns,
+      rows: [{ dates: "Үнэ", cells }],
+      note: "",
+    },
+    remainingNote: text.slice(consumedEnd).replace(/^[\s—–:;,]+/, "").trim(),
+  };
+}
+
 function normalizeTripData(trip) {
   if (!trip) return trip;
   const clone = structuredClone(trip);
@@ -52,6 +97,15 @@ function normalizeTripData(trip) {
     photo: day.photo || null,
     photo_caption: day.photo_caption || "",
   }));
+
+  if (!clone.price_table && clone.price_note) {
+    const parsedPriceNote = tableFromPriceNote(clone.price_note);
+    if (parsedPriceNote) {
+      clone.price_table = parsedPriceNote.priceTable;
+      clone.price_note = parsedPriceNote.remainingNote;
+    }
+  }
+
   if (clone.price_table) {
     clone.price_table.columns = (clone.price_table.columns || []).filter((x) => String(x || "").trim());
     const colCount = clone.price_table.columns.length;
@@ -376,7 +430,6 @@ export default function Home() {
     if (document.fonts?.ready) await document.fonts.ready;
     await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-    const htmlToImage = await import("html-to-image");
     return htmlToImage.toPng(node, {
       pixelRatio: 2,
       width: node.offsetWidth,

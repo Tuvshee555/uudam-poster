@@ -172,6 +172,20 @@ function removePriceNoteBox(trip, priceTable, boxText, upd) {
   upd(["price_note"], remaining);
 }
 
+function updatePriceNoteBox(trip, priceTable, oldText, newText, upd) {
+  const cleanNewText = String(newText || "").trim();
+
+  if (priceTable?.fromPriceNote) {
+    const notes = splitPriceNotes(priceTable.note).map((note) => (note === oldText ? cleanNewText : note)).filter(Boolean);
+    const next = [priceTable.priceText, notes.join("\n")].filter(Boolean).join(" ");
+    upd(["price_note"], next);
+    return;
+  }
+
+  const notes = splitPriceNotes(trip.price_note).map((note) => (note === oldText ? cleanNewText : note)).filter(Boolean);
+  upd(["price_note"], notes.join("\n"));
+}
+
 function getPriceTable(trip) {
   if (trip.price_table) return trip.price_table;
   const noteTable = tableFromPriceNote(trip.price_note);
@@ -324,14 +338,21 @@ export default function Poster({
                       >
                         ×
                       </button>
-                      {title ? <div className="price-note-title">{title}</div> : null}
-                      {items.length > 1 ? (
-                        <ul>
-                          {items.map((item, ii) => <li key={ii}>{item}</li>)}
-                        </ul>
-                      ) : (
-                        <div className="price-note-line">⚠ {items[0]}</div>
-                      )}
+                      <div
+                        className="price-note-content"
+                        contentEditable
+                        suppressContentEditableWarning
+                        onBlur={(e) => updatePriceNoteBox(t, priceTable, note, e.currentTarget.innerText, upd)}
+                      >
+                        {title ? <div className="price-note-title">{title}:</div> : null}
+                        {items.length > 1 ? (
+                          <ul>
+                            {items.map((item, ii) => <li key={ii}>{item}</li>)}
+                          </ul>
+                        ) : (
+                          <div className="price-note-line">⚠ {items[0]}</div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
