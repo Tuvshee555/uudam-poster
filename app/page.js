@@ -255,23 +255,58 @@ export default function Home() {
     loadHistory();
   }, []);
 
-  async function handleFile(file) {
-    if (!file) return;
+  async function extractOne(file) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const r = await fetch("/api/extract", { method: "POST", body: fd }).then((x) => x.json());
+    if (r.error) throw new Error(r.error);
+    return r;
+  }
+
+  async function saveTripData(data, sourceFile) {
+    const cleanTrip = normalizeTripData(data);
+    const r = await fetch("/api/trips", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: cleanTrip.title, data: cleanTrip, source_file: sourceFile }),
+    }).then((x) => x.json());
+    if (r.error) throw new Error(r.error);
+    return { id: r.id, trip: cleanTrip };
+  }
+
+  async function handleFiles(files) {
+    if (!files || files.length === 0) return;
     setError("");
-    const isImage = file.type.startsWith("image/");
-    setBusy(isImage ? "AI зургийг уншиж байна…" : "AI бичиг баримтыг уншиж байна…");
-    try {
-      const fd = new FormData();
-      fd.append("file", file);
-      const r = await fetch("/api/extract", { method: "POST", body: fd }).then((x) => x.json());
-      if (r.error) throw new Error(r.error);
-      setTrip(normalizeTripData(r.trip));
-      setTripId(null);
-      setSource(r.source_file || file.name);
-    } catch (e) {
-      setError(String(e.message || e));
-    } finally {
-      setBusy("");
+    const fileList = Array.from(files).filter((f) => f instanceof File);
+    const saved = [];
+    const failed = [];
+
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      setBusy(`${fileList.length} файлаас ${i + 1}-г уншиж байна: ${file.name}…`);
+      try {
+        const { trip, source_file } = await extractOne(file);
+        setBusy(`${fileList.length} файлаас ${i + 1}-г хадгалж байна: ${file.name}…`);
+        const { id } = await saveTripData(trip, source_file || file.name);
+        saved.push({ file: file.name, trip, id });
+      } catch (e) {
+        console.error("file failed:", file.name, e);
+        failed.push({ file: file.name, error: String(e.message || e) });
+      }
+    }
+
+    if (saved.length > 0) {
+      const first = saved[0];
+      setTrip(normalizeTripData(first.trip));
+      setTripId(first.id);
+      setSource(first.file);
+    }
+
+    await loadHistory();
+    setBusy("");
+
+    if (failed.length > 0) {
+      setError(`${failed.length} файл уншихад алдаа гарлаа: ${failed.map((f) => f.file).join(", ")}`);
     }
   }
 
@@ -593,18 +628,19 @@ export default function Home() {
               onDrop={(e) => {
                 e.preventDefault();
                 e.currentTarget.classList.remove("over");
-                handleFile(e.dataTransfer.files[0]);
+                handleFiles(e.dataTransfer.files);
               }}
             >
               <input
                 type="file"
+                multiple
                 accept=".pdf,.docx,.txt,image/*"
                 style={{ display: "none" }}
-                onChange={(e) => handleFile(e.target.files[0])}
+                onChange={(e) => handleFiles(e.target.files)}
               />
               <div className="ic">⬆</div>
               <div className="dt">Файл эсвэл зураг энд чирж тавь</div>
-              <div className="ds">Word (.docx), PDF, .txt · JPG, PNG, WEBP зураг</div>
+              <div className="ds">Олон файлыг нэг дор сонгох боломжтой · Word (.docx), PDF, .txt · JPG, PNG, WEBP зураг</div>
             </label>
             {busy && <div className="note" style={{ marginTop: 14, textAlign: "center" }}>⏳ {busy}</div>}
             {error && <div className="err" style={{ textAlign: "center" }}>⚠ {error}</div>}
