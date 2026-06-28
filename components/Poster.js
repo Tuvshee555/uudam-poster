@@ -33,6 +33,7 @@ const MEAL_LABELS = [
   ["lunch", "Өдрийн хоол"],
   ["dinner", "Оройн хоол"],
 ];
+const HERO_KICKER = "😊 АЯЛАЛ БҮХЭН ДАВТАГДАШГҮЙ😊";
 
 function cleanText(value) {
   const text = String(value ?? "").trim();
@@ -105,19 +106,8 @@ export default function Poster({
           </div>
         </div>
 
-        <div
-          className="hero"
-          style={
-            t.hero_image
-              ? {
-                  backgroundImage: `linear-gradient(135deg, rgba(15,58,97,.84), rgba(29,93,149,.66)), url(${t.hero_image})`,
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                }
-              : undefined
-          }
-        >
-          <Ed as="div" className="kicker" value={t.subtitle || t.agency} onChange={(v) => upd(["subtitle"], v)} />
+        <div className="hero">
+          <div className="kicker">{HERO_KICKER}</div>
           <Ed as="div" className="htitle" value={t.title} onChange={(v) => upd(["title"], v)} />
         </div>
 

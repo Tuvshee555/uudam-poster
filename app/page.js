@@ -98,7 +98,6 @@ export default function Home() {
   const page1Ref = useRef(null);
   const previewRef = useRef(null);
   const mainRef = useRef(null);
-  const heroInputRef = useRef(null);
   const dayPhotoInputRefs = useRef({});
 
   const upd = (path, value) => setTrip((t) => setPath(t, path, value));
@@ -505,66 +504,6 @@ export default function Home() {
     }
   }
 
-  async function downloadOneImage() {
-    setBusy("Нэг зураг бэлдэж байна…");
-    try {
-      await withExportMode(async () => {
-        const nodes = [page1Ref.current].filter(Boolean);
-        const urls = [];
-        for (const n of nodes) urls.push(await capture(n));
-
-        const imgs = await Promise.all(
-          urls.map(
-            (u) =>
-              new Promise((res, rej) => {
-                const i = new Image();
-                i.onload = () => res(i);
-                i.onerror = rej;
-                i.src = u;
-              })
-          )
-        );
-
-        const W = Math.max(...imgs.map((i) => i.width));
-        const H = imgs.reduce((s, i) => s + i.height, 0);
-        const c = document.createElement("canvas");
-        c.width = W;
-        c.height = H;
-        const ctx = c.getContext("2d");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, W, H);
-        let y = 0;
-        for (const i of imgs) {
-          ctx.drawImage(i, 0, y);
-          y += i.height;
-        }
-
-        const a = document.createElement("a");
-        a.href = c.toDataURL("image/png");
-        a.download = `${(trip.title || "poster").slice(0, 30)}-full.png`;
-        a.click();
-      });
-    } catch (e) {
-      setError(String(e.message || e));
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function onHeroFile(file) {
-    if (!file) return;
-    setBusy("Зураг нэмж байна…");
-    try {
-      const dataUrl = await resizeImage(file);
-      upd(["hero_image"], dataUrl);
-    } catch (e) {
-      setError(String(e.message || e));
-    } finally {
-      setBusy("");
-      if (heroInputRef.current) heroInputRef.current.value = "";
-    }
-  }
-
   async function onDayPhotoFile(index, file) {
     if (!file) return;
     setBusy("Өдрийн зураг нэмж байна…");
@@ -708,24 +647,10 @@ export default function Home() {
 
               <div className="toolbar">
                 <button className="btn" onClick={save} disabled={!!busy}>💾 Хадгалах</button>
-                <button className="btn ghost" onClick={() => heroInputRef.current?.click()} disabled={!!busy}>
-                  📷 {trip.hero_image ? "Зураг солих" : "Нүүр зураг нэмэх"}
-                </button>
-                {trip.hero_image && (
-                  <button className="btn ghost" onClick={() => upd(["hero_image"], null)} disabled={!!busy}>✕ Зураг авах</button>
-                )}
                 <button className="btn ghost" onClick={downloadPng} disabled={!!busy}>🖼 PNG (нэг poster)</button>
-                <button className="btn ghost" onClick={downloadOneImage} disabled={!!busy}>🧩 Нэг зураг (бүгд)</button>
                 <button className="btn ghost" onClick={downloadPdf} disabled={!!busy}>📑 PDF</button>
                 <button className="btn ghost" onClick={downloadSplitImages} disabled={!!busy}>💬 Messenger Split</button>
                 <button className="btn ghost" onClick={downloadSplitZip} disabled={!!busy}>🗜 Messenger ZIP</button>
-                <input
-                  ref={heroInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  onChange={(e) => onHeroFile(e.target.files[0])}
-                />
                 <span className="note" style={{ alignSelf: "center" }}>
                   Бичвэр дээр дарж засаарай · хоолны таглыг дарж асаах/унтраах · Messenger split: main poster-оос 1-2 зураг
                 </span>
