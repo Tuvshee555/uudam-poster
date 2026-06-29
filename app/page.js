@@ -997,7 +997,10 @@ export default function Home() {
                         <div className="hist-num">{index + 1}</div>
                         <button type="button" className="hist-open" onClick={() => openTrip(h.id)}>
                           <div className="t">{h.title}</div>
-                          <div className="d">{new Date(h.updated_at).toLocaleString()}</div>
+                          <div className="d">
+                            {h.source_file && <span className="hist-src">{h.source_file}</span>}
+                            {new Date(h.updated_at).toLocaleString()}
+                          </div>
                           {duplicateCount > 1 && <div className="dup-badge">Ижил нэр x{duplicateCount}</div>}
                         </button>
                         <button
