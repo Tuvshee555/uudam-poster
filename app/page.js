@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
 import Poster from "../components/Poster";
 import { createDefaultTrip } from "../lib/defaultTrip";
@@ -144,11 +144,38 @@ function normalizeTripData(trip) {
   return clone;
 }
 
+function normalizeHistoryTitle(title) {
+  return String(title || "Untitled")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase();
+}
+
+function historyDateLabel(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Огноогүй";
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const sameDay = (a, b) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  if (sameDay(date, today)) return "Өнөөдөр";
+  if (sameDay(date, yesterday)) return "Өчигдөр";
+  return date.toLocaleDateString();
+}
+
 export default function Home() {
   const [trip, setTrip] = useState(null);
   const [tripId, setTripId] = useState(null);
   const [source, setSource] = useState("");
   const [history, setHistory] = useState([]);
+  const [historySearch, setHistorySearch] = useState("");
+  const [historySort, setHistorySort] = useState("newest");
+  const [historyGroup, setHistoryGroup] = useState("date");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
   const [scale, setScale] = useState(0.6);
@@ -160,6 +187,46 @@ export default function Home() {
   const dayPhotoInputRefs = useRef({});
 
   const upd = (path, value) => setTrip((t) => setPath(t, path, value));
+
+  const historyTitleCounts = useMemo(() => {
+    const counts = new Map();
+    for (const item of history) {
+      const key = normalizeHistoryTitle(item.title);
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    return counts;
+  }, [history]);
+
+  const visibleHistoryGroups = useMemo(() => {
+    const query = historySearch.trim().toLocaleLowerCase();
+    const filtered = history.filter((item) => {
+      const haystack = `${item.title || ""} ${item.source_file || ""}`.toLocaleLowerCase();
+      return !query || haystack.includes(query);
+    });
+
+    filtered.sort((a, b) => {
+      if (historySort === "oldest") return new Date(a.updated_at) - new Date(b.updated_at);
+      if (historySort === "title") return String(a.title || "").localeCompare(String(b.title || ""));
+      return new Date(b.updated_at) - new Date(a.updated_at);
+    });
+
+    if (historyGroup === "none") return [{ label: "", items: filtered }];
+
+    const groups = new Map();
+    for (const item of filtered) {
+      const duplicateCount = historyTitleCounts.get(normalizeHistoryTitle(item.title)) || 0;
+      let label = historyDateLabel(item.updated_at);
+      if (historyGroup === "duplicate") label = duplicateCount > 1 ? "Давхардсан нэртэй" : "Давхардаагүй";
+      if (!groups.has(label)) groups.set(label, []);
+      groups.get(label).push(item);
+    }
+
+    return Array.from(groups, ([label, items]) => ({ label, items }));
+  }, [history, historyGroup, historySearch, historySort, historyTitleCounts]);
+
+  const currentDuplicateCount = trip
+    ? [...historyTitleCounts.entries()].find(([key]) => key === normalizeHistoryTitle(trip.title))?.[1] || 0
+    : 0;
 
   const startTemplate = () => {
     setError("");
@@ -684,9 +751,14 @@ export default function Home() {
   }
 
   async function save() {
+    setError("");
     setBusy("Хадгалж байна…");
     try {
       const cleanTrip = normalizeTripData(trip);
+      const matchingTitles = history.filter((item) => {
+        if (item.id === tripId) return false;
+        return normalizeHistoryTitle(item.title) === normalizeHistoryTitle(cleanTrip.title);
+      });
       const r = await fetch("/api/trips", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -696,6 +768,9 @@ export default function Home() {
       setTrip(cleanTrip);
       setTripId(r.id);
       await loadHistory();
+      if (matchingTitles.length > 0) {
+        setError(`Ижил нэртэй ${matchingTitles.length} хадгалсан аялал байна: "${cleanTrip.title}"`);
+      }
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -862,25 +937,71 @@ export default function Home() {
 
         <div className="sidebar">
           <div className="card">
-            <h3>Түүх</h3>
+            <div className="hist-head">
+              <h3>Түүх</h3>
+              <span>{history.length}</span>
+            </div>
+            <div className="hist-controls">
+              <label className="hist-search">
+                <span>Хайх</span>
+                <input
+                  value={historySearch}
+                  onChange={(e) => setHistorySearch(e.target.value)}
+                  placeholder="Нэрээр хайх..."
+                />
+              </label>
+              <div className="hist-filters">
+                <label>
+                  Эрэмбэ
+                  <select value={historySort} onChange={(e) => setHistorySort(e.target.value)}>
+                    <option value="newest">Шинэ эхэнд</option>
+                    <option value="oldest">Хуучин эхэнд</option>
+                    <option value="title">Нэрээр</option>
+                  </select>
+                </label>
+                <label>
+                  Бүлэг
+                  <select value={historyGroup} onChange={(e) => setHistoryGroup(e.target.value)}>
+                    <option value="date">Огноогоор</option>
+                    <option value="duplicate">Давхардлаар</option>
+                    <option value="none">Бүлэггүй</option>
+                  </select>
+                </label>
+              </div>
+              {trip && currentDuplicateCount > (tripId ? 1 : 0) && (
+                <div className="hist-warning">Ижил нэртэй хадгалсан аялал байна.</div>
+              )}
+            </div>
             <div className="hist">
               {history.length === 0 && <div className="note">Хадгалсан постер алга</div>}
-              {history.map((h, index) => (
-                <div className="hist-item" key={h.id}>
-                  <div className="hist-num">{index + 1}</div>
-                  <button type="button" className="hist-open" onClick={() => openTrip(h.id)}>
-                    <div className="t">{h.title}</div>
-                    <div className="d">{new Date(h.updated_at).toLocaleString()}</div>
-                  </button>
-                  <button
-                    type="button"
-                    className="hist-delete"
-                    title="Постер устгах"
-                    onClick={() => deleteTrip(h.id)}
-                    disabled={!!busy}
-                  >
-                    ×
-                  </button>
+              {history.length > 0 && visibleHistoryGroups.every((group) => group.items.length === 0) && (
+                <div className="note">Хайлтад тохирох аялал алга</div>
+              )}
+              {visibleHistoryGroups.map((group) => (
+                <div className="hist-group" key={group.label || "all"}>
+                  {group.label && <div className="hist-group-title">{group.label}</div>}
+                  {group.items.map((h, index) => {
+                    const duplicateCount = historyTitleCounts.get(normalizeHistoryTitle(h.title)) || 0;
+                    return (
+                      <div className={"hist-item" + (duplicateCount > 1 ? " duplicate" : "")} key={h.id}>
+                        <div className="hist-num">{index + 1}</div>
+                        <button type="button" className="hist-open" onClick={() => openTrip(h.id)}>
+                          <div className="t">{h.title}</div>
+                          <div className="d">{new Date(h.updated_at).toLocaleString()}</div>
+                          {duplicateCount > 1 && <div className="dup-badge">Ижил нэр x{duplicateCount}</div>}
+                        </button>
+                        <button
+                          type="button"
+                          className="hist-delete"
+                          title="Постер устгах"
+                          onClick={() => deleteTrip(h.id)}
+                          disabled={!!busy}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               ))}
             </div>
