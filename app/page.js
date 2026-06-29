@@ -940,6 +940,16 @@ export default function Home() {
             <div className="hist-head">
               <h3>Түүх</h3>
               <span>{history.length}</span>
+              {history.length > 0 && (
+                <a
+                  className="btn ghost hist-export-btn"
+                  href="/api/trips/export"
+                  download
+                  title="Бүх аялалыг JSON файлаар татах"
+                >
+                  ⬇ Татах
+                </a>
+              )}
             </div>
             <div className="hist-controls">
               <label className="hist-search">

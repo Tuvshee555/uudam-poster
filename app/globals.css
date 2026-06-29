@@ -60,8 +60,10 @@ button,input,textarea{font:inherit}
 .edit-hints span{border:1px dashed #c7d7e6;border-radius:14px;background:#fff;padding:10px 12px;color:#536a82;font-size:12px;line-height:1.45}
 
 .sidebar h3{font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}
-.hist-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.hist-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.hist-head h3{flex:1}
 .hist-head span{min-width:24px;height:24px;border-radius:999px;background:#eef4fb;color:var(--navy);font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.hist-export-btn{font-size:12px;padding:4px 10px;white-space:nowrap;text-decoration:none}
 .hist-controls{display:grid;gap:8px;margin-bottom:12px}
 .hist-search{display:grid;gap:4px;color:var(--muted);font-size:11px;font-weight:800}
 .hist-search input,.hist-filters select{width:100%;border:1px solid #d8e4f0;background:#fff;color:var(--ink);border-radius:8px;padding:7px 9px;font-size:12px;outline:none}
