@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
 import Poster from "../components/Poster";
 import { createDefaultTrip } from "../lib/defaultTrip";
+import { syncToChatbot } from "../lib/syncToChatbot";
 
 const POSTER_WIDTH = 1080;
 const MESSENGER_SINGLE_IMAGE_MAX_HEIGHT = 1900;
@@ -647,6 +648,7 @@ export default function Home() {
           a.click();
         }
       });
+      syncToChatbot(trip).catch(() => {});
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -678,6 +680,7 @@ export default function Home() {
         a.click();
         setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
       });
+      syncToChatbot(trip).catch(() => {});
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -698,6 +701,7 @@ export default function Home() {
           a.click();
         }
       });
+      syncToChatbot(trip).catch(() => {});
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -722,6 +726,7 @@ export default function Home() {
         }
         pdf.save(`${(trip.title || "poster").slice(0, 30)}.pdf`);
       });
+      syncToChatbot(trip).catch(() => {});
     } catch (e) {
       setError(String(e.message || e));
     } finally {
