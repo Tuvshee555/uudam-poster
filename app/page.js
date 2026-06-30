@@ -402,6 +402,23 @@ export default function Home() {
   }
 
   async function extractOne(file) {
+    // Files >3MB go via Vercel Blob to avoid the 4.5MB function payload limit
+    const DIRECT_LIMIT = 3 * 1024 * 1024;
+    if (file.size > DIRECT_LIMIT) {
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        headers: { "x-filename": file.name, "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      }).then((x) => x.json());
+      if (uploadRes.error) throw new Error(uploadRes.error);
+      const r = await fetch("/api/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ blobUrl: uploadRes.url, fileName: file.name, mimeType: file.type }),
+      }).then((x) => x.json());
+      if (r.error) throw new Error(r.error);
+      return r;
+    }
     const fd = new FormData();
     fd.append("file", file);
     const r = await fetch("/api/extract", { method: "POST", body: fd }).then((x) => x.json());

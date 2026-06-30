@@ -46,49 +46,61 @@ async function extractPdfTrip(b64, filename) {
   });
 }
 
+async function resolveFileFromRequest(req) {
+  const contentType = req.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    // Large file path: client uploaded to Vercel Blob, sends us the URL
+    const { blobUrl, fileName, mimeType } = await req.json();
+    if (!blobUrl) throw new Error("No blobUrl");
+    const res = await fetch(blobUrl);
+    if (!res.ok) throw new Error(`Failed to fetch blob: ${res.status}`);
+    const arrayBuffer = await res.arrayBuffer();
+    const { del } = await import("@vercel/blob");
+    del(blobUrl).catch(() => {}); // clean up async, don't block
+    return { buffer: Buffer.from(arrayBuffer), name: (fileName || "file").toLowerCase(), mime: mimeType || "" };
+  }
+  // Small file path: direct multipart upload
+  const form = await req.formData();
+  const file = form.get("file");
+  if (!file) throw new Error("No file");
+  if (file.size > MAX_FILE_SIZE_BYTES) throw Object.assign(new Error("File too large. Max 100MB."), { status: 413 });
+  return { buffer: Buffer.from(await file.arrayBuffer()), name: file.name.toLowerCase(), mime: file.type || "" };
+}
+
 export async function POST(req) {
   try {
-    const form = await req.formData();
-    const file = form.get("file");
-    if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      return NextResponse.json({ error: "File too large. Max 100MB." }, { status: 413 });
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const name = file.name.toLowerCase();
-    const mime = file.type || "";
+    const { buffer, name, mime } = await resolveFileFromRequest(req);
 
     if (IMAGE_TYPES.includes(mime) || /\.(jpe?g|png|webp|gif|bmp)$/.test(name)) {
       const b64 = buffer.toString("base64");
       const trip = await extractTripFromImage(b64, mime || "image/jpeg");
-      return NextResponse.json({ trip, source_file: file.name });
+      return NextResponse.json({ trip, source_file: name });
     }
 
     if (name.endsWith(".pdf") || mime === "application/pdf") {
       const b64 = buffer.toString("base64");
       const [trip, pdfImages, pdfFacts] = await Promise.all([
-        extractPdfTrip(b64, file.name),
+        extractPdfTrip(b64, name),
         extractPdfImages(buffer),
         extractPdfFacts(buffer),
       ]);
       applyDayText(trip, pdfFacts.days);
       applyMealMarks(trip, pdfFacts.meals);
       assignPhotos(trip, pdfImages);
-      return NextResponse.json({ trip, source_file: file.name });
+      return NextResponse.json({ trip, source_file: name });
     }
 
     // docx / txt
-    const text = await fileToText(buffer, file.name);
+    const text = await fileToText(buffer, name);
     if (!text || text.trim().length < 20) {
       return NextResponse.json({ error: "Could not read text from this file." }, { status: 422 });
     }
     const [trip, fileImages] = await Promise.all([
       extractTrip(text),
-      fileToImages(buffer, file.name),
+      fileToImages(buffer, name),
     ]);
     assignPhotos(trip, fileImages);
-    return NextResponse.json({ trip, source_file: file.name });
+    return NextResponse.json({ trip, source_file: name });
   } catch (e) {
     console.error("extract failed:", e);
     return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
