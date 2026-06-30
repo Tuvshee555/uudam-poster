@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { sql } from "../../../../lib/db";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 // Download all saved trips as a single JSON file (full data included)
 export async function GET() {
