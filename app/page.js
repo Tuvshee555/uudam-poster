@@ -829,17 +829,19 @@ export default function Home() {
         <div className="main" ref={mainRef}>
           {trip ? (
             /* Compact upload strip — shown when a poster is already open */
-            <label
+            <div
               className="upload-strip"
               onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("over"); }}
               onDragLeave={(e) => e.currentTarget.classList.remove("over")}
               onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("over"); handleFiles(e.dataTransfer.files); }}
             >
-              <input type="file" multiple accept=".pdf,.docx,.txt,image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
-              <span className="upload-strip-ic">⬆</span>
-              <span className="upload-strip-label">Шинэ файл чирж тавих эсвэл дарах</span>
-              <button type="button" className="btn ghost upload-strip-tpl" onClick={(e) => { e.preventDefault(); startTemplate(); }}>Хоосон template</button>
-            </label>
+              <label className="upload-strip-file">
+                <input type="file" multiple accept=".pdf,.docx,.txt,image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
+                <span className="upload-strip-ic">⬆</span>
+                <span className="upload-strip-label">Шинэ файл чирж тавих эсвэл дарах</span>
+              </label>
+              <button type="button" className="btn ghost upload-strip-tpl" onClick={startTemplate}>Хоосон template</button>
+            </div>
           ) : (
             /* Full uploader — shown on empty state */
             <div className="uploader">

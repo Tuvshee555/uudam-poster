@@ -31,10 +31,11 @@ button,input,textarea{font:inherit}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
 
 /* Compact upload strip — replaces the full uploader once a poster is open */
-.upload-strip{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed #b9c6d8;border-radius:12px;background:#fff;cursor:pointer;transition:.15s;margin-bottom:4px}
+.upload-strip{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed #b9c6d8;border-radius:12px;background:#fff;transition:.15s;margin-bottom:4px}
 .upload-strip:hover,.upload-strip.over{border-color:var(--navy);background:#f7faff}
+.upload-strip-file{display:flex;align-items:center;gap:10px;flex:1;cursor:pointer}
 .upload-strip-ic{width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.upload-strip-label{font-size:13px;font-weight:700;color:var(--navy);flex:1}
+.upload-strip-label{font-size:13px;font-weight:700;color:var(--navy)}
 .upload-strip-tpl{font-size:12px;padding:5px 10px;flex-shrink:0}
 
 .uploader{max-width:780px;margin:40px auto 0;text-align:center}
