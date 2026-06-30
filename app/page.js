@@ -634,6 +634,19 @@ export default function Home() {
     });
   }
 
+  // Capture the rendered poster as Messenger-sized slices and push them to
+  // the chatbot so the bot can send the finished poster to customers.
+  // Best-effort: silent, never blocks the download.
+  async function syncPosterToChatbot() {
+    try {
+      const slices = await withExportMode(() => captureMessengerSlices());
+      const images = slices.map((s) => s.url);
+      await syncToChatbot(trip, images);
+    } catch {
+      /* ignore — sync is best-effort */
+    }
+  }
+
   async function downloadSplitImages() {
     setBusy("Messenger зурагнуудыг бэлдэж байна…");
     try {
@@ -648,7 +661,7 @@ export default function Home() {
           a.click();
         }
       });
-      syncToChatbot(trip).catch(() => {});
+      void syncPosterToChatbot();
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -680,7 +693,7 @@ export default function Home() {
         a.click();
         setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
       });
-      syncToChatbot(trip).catch(() => {});
+      void syncPosterToChatbot();
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -701,7 +714,7 @@ export default function Home() {
           a.click();
         }
       });
-      syncToChatbot(trip).catch(() => {});
+      void syncPosterToChatbot();
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -726,7 +739,7 @@ export default function Home() {
         }
         pdf.save(`${(trip.title || "poster").slice(0, 30)}.pdf`);
       });
-      syncToChatbot(trip).catch(() => {});
+      void syncPosterToChatbot();
     } catch (e) {
       setError(String(e.message || e));
     } finally {
