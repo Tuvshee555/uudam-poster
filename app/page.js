@@ -4,7 +4,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
 import Poster from "../components/Poster";
 import { createDefaultTrip } from "../lib/defaultTrip";
-import { syncToChatbot } from "../lib/syncToChatbot";
+import SyncModal from "../components/SyncModal";
+import {
+  isChatbotSyncConfigured,
+  matchTripOnChatbot,
+  commitPosterToChatbot,
+} from "../lib/syncToChatbot";
 
 const POSTER_WIDTH = 1080;
 const MESSENGER_SINGLE_IMAGE_MAX_HEIGHT = 1900;
@@ -181,6 +186,14 @@ export default function Home() {
   const [error, setError] = useState("");
   const [scale, setScale] = useState(0.6);
   const [totalH, setTotalH] = useState(0);
+
+  // Chatbot sync modal state
+  const [syncOpen, setSyncOpen] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncMatch, setSyncMatch] = useState(null); // { candidates, allTrips }
+  const [syncImages, setSyncImages] = useState([]); // captured poster slice data URLs
+  const [syncError, setSyncError] = useState("");
+  const [syncResult, setSyncResult] = useState(null);
 
   const page1Ref = useRef(null);
   const previewRef = useRef(null);
@@ -634,17 +647,67 @@ export default function Home() {
     });
   }
 
-  // Capture the rendered poster as Messenger-sized slices and push them to
-  // the chatbot so the bot can send the finished poster to customers.
-  // Best-effort: silent, never blocks the download.
-  async function syncPosterToChatbot() {
-    try {
-      const slices = await withExportMode(() => captureMessengerSlices());
-      const images = slices.map((s) => s.url);
-      await syncToChatbot(trip, images);
-    } catch {
-      /* ignore — sync is best-effort */
+  // ---- Chatbot sync (user-confirmed) ----------------------------------
+  // Open the modal: capture the rendered poster, then ask the chatbot which
+  // trip(s) match. Nothing is written yet — the modal waits for confirmation.
+  async function openChatbotSync() {
+    if (!trip) return;
+    if (!isChatbotSyncConfigured()) {
+      setError("Чатботын тохиргоо алга байна (.env.local дотор NEXT_PUBLIC_CHATBOT_URL/SECRET).");
+      return;
     }
+    setSyncOpen(true);
+    setSyncLoading(true);
+    setSyncError("");
+    setSyncResult(null);
+    setSyncMatch(null);
+    setSyncImages([]);
+
+    try {
+      // Capture the poster as Messenger-sized slices (the finished branded poster).
+      const slices = await withExportMode(() => captureMessengerSlices());
+      setSyncImages(slices.map((s) => s.url));
+
+      const match = await matchTripOnChatbot(trip.title);
+      if (!match.ok) {
+        setSyncError(match.error || "Холболт амжилтгүй");
+      } else {
+        setSyncMatch({ candidates: match.candidates || [], allTrips: match.allTrips || [] });
+      }
+    } catch (e) {
+      setSyncError(String(e?.message || e));
+    } finally {
+      setSyncLoading(false);
+    }
+  }
+
+  // Confirm: actually upload + attach. Only runs after the user picks in the modal.
+  async function confirmChatbotSync({ tripId: targetId, createNew, mode }) {
+    setSyncLoading(true);
+    setSyncError("");
+    try {
+      const out = await commitPosterToChatbot({
+        title: trip.title,
+        images: syncImages,
+        tripId: targetId,
+        createNew,
+        mode,
+      });
+      if (!out.ok) {
+        setSyncError(out.error || "Хадгалах амжилтгүй");
+      } else {
+        setSyncResult(out);
+      }
+    } catch (e) {
+      setSyncError(String(e?.message || e));
+    } finally {
+      setSyncLoading(false);
+    }
+  }
+
+  function closeChatbotSync() {
+    if (syncLoading) return;
+    setSyncOpen(false);
   }
 
   async function downloadSplitImages() {
@@ -661,7 +724,6 @@ export default function Home() {
           a.click();
         }
       });
-      void syncPosterToChatbot();
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -693,7 +755,6 @@ export default function Home() {
         a.click();
         setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
       });
-      void syncPosterToChatbot();
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -714,7 +775,6 @@ export default function Home() {
           a.click();
         }
       });
-      void syncPosterToChatbot();
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -739,7 +799,6 @@ export default function Home() {
         }
         pdf.save(`${(trip.title || "poster").slice(0, 30)}.pdf`);
       });
-      void syncPosterToChatbot();
     } catch (e) {
       setError(String(e.message || e));
     } finally {
@@ -924,6 +983,7 @@ export default function Home() {
                 <button className="btn ghost" onClick={downloadPdf} disabled={!!busy}>📑 PDF</button>
                 <button className="btn ghost" onClick={downloadSplitImages} disabled={!!busy}>💬 Messenger Split</button>
                 <button className="btn ghost" onClick={downloadSplitZip} disabled={!!busy}>🗜 Messenger ZIP</button>
+                <button className="btn" onClick={openChatbotSync} disabled={!!busy || syncOpen}>📤 Чатбот руу илгээх</button>
                 <span className="note" style={{ alignSelf: "center" }}>
                   Бичвэр дээр дарж засаарай · хоолны таглыг дарж асаах/унтраах · Messenger split: main poster-оос 1-2 зураг, хэт урт бол 3
                 </span>
@@ -1042,6 +1102,18 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <SyncModal
+        open={syncOpen}
+        loading={syncLoading}
+        matchData={syncMatch}
+        error={syncError}
+        result={syncResult}
+        posterTitle={trip?.title || ""}
+        imageCount={syncImages.length}
+        onConfirm={confirmChatbotSync}
+        onClose={closeChatbotSync}
+      />
     </>
   );
 }
