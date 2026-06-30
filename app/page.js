@@ -827,44 +827,45 @@ export default function Home() {
 
       <div className="layout">
         <div className="main" ref={mainRef}>
-          <div className="uploader">
-            <div className="lead">
-              Хятадаас ирсэн файлаa оруулаад, брэнд постер бэлэн.
-              <small>AI уншиж, аяллын постерийг ~10 секундэд үүсгэнэ.</small>
-            </div>
+          {trip ? (
+            /* Compact upload strip — shown when a poster is already open */
             <label
-              className="drop"
-              onDragOver={(e) => {
-                e.preventDefault();
-                e.currentTarget.classList.add("over");
-              }}
+              className="upload-strip"
+              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("over"); }}
               onDragLeave={(e) => e.currentTarget.classList.remove("over")}
-              onDrop={(e) => {
-                e.preventDefault();
-                e.currentTarget.classList.remove("over");
-                handleFiles(e.dataTransfer.files);
-              }}
+              onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("over"); handleFiles(e.dataTransfer.files); }}
             >
-              <input
-                type="file"
-                multiple
-                accept=".pdf,.docx,.txt,image/*"
-                style={{ display: "none" }}
-                onChange={(e) => handleFiles(e.target.files)}
-              />
-              <div className="ic">⬆</div>
-              <div className="dt">Файл эсвэл зураг энд чирж тавь</div>
-              <div className="ds">{`Дээд тал нь ${MAX_UPLOAD_FILES} файл · тус бүр ${MAX_UPLOAD_SIZE_MB}MB хүртэл · Word (.docx), PDF, .txt · JPG, PNG, WEBP зураг`}</div>
+              <input type="file" multiple accept=".pdf,.docx,.txt,image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
+              <span className="upload-strip-ic">⬆</span>
+              <span className="upload-strip-label">Шинэ файл чирж тавих эсвэл дарах</span>
+              <button type="button" className="btn ghost upload-strip-tpl" onClick={(e) => { e.preventDefault(); startTemplate(); }}>Хоосон template</button>
             </label>
-            {busy && <div className="note" style={{ marginTop: 14, textAlign: "center" }}>⏳ {busy}</div>}
-            {error && <div className="err" style={{ textAlign: "center" }}>⚠ {error}</div>}
-            <div className="template-start">
-              <button type="button" className="btn" onClick={startTemplate}>
-                Default template-ээр эхлэх
-              </button>
-              <span>Файлгүйгээр шууд poster нээгээд бүх текст, үнэ, өдөр, хоол, зураг засна.</span>
+          ) : (
+            /* Full uploader — shown on empty state */
+            <div className="uploader">
+              <div className="lead">
+                Хятадаас ирсэн файлаa оруулаад, брэнд постер бэлэн.
+                <small>AI уншиж, аяллын постерийг ~10 секундэд үүсгэнэ.</small>
+              </div>
+              <label
+                className="drop"
+                onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("over"); }}
+                onDragLeave={(e) => e.currentTarget.classList.remove("over")}
+                onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("over"); handleFiles(e.dataTransfer.files); }}
+              >
+                <input type="file" multiple accept=".pdf,.docx,.txt,image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
+                <div className="ic">⬆</div>
+                <div className="dt">Файл эсвэл зураг энд чирж тавь</div>
+                <div className="ds">{`Дээд тал нь ${MAX_UPLOAD_FILES} файл · тус бүр ${MAX_UPLOAD_SIZE_MB}MB хүртэл · Word (.docx), PDF, .txt · JPG, PNG, WEBP зураг`}</div>
+              </label>
+              <div className="template-start">
+                <button type="button" className="btn" onClick={startTemplate}>Default template-ээр эхлэх</button>
+                <span>Файлгүйгээр шууд poster нээгээд бүх текст, үнэ, өдөр, хоол, зураг засна.</span>
+              </div>
             </div>
-          </div>
+          )}
+          {busy && <div className="note" style={{ marginTop: 10, textAlign: "center" }}>⏳ {busy}</div>}
+          {error && <div className="err" style={{ textAlign: "center" }}>⚠ {error}</div>}
 
           {trip && (
             <>
