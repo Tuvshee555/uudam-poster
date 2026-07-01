@@ -10,6 +10,12 @@ export const maxDuration = 60;
 // file body through this route (the old approach) hit that cap on anything
 // bigger. Client-direct upload has no such limit.
 export async function POST(req) {
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return NextResponse.json(
+      { error: "Server misconfigured: BLOB_READ_WRITE_TOKEN is not set. Connect the Blob store to this project in Vercel → Storage → uudam-poster-blob → Connect Project." },
+      { status: 500 }
+    );
+  }
   const body = await req.json();
   try {
     const jsonResponse = await handleUpload({
