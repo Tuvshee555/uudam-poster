@@ -420,10 +420,15 @@ export default function Home() {
       return r;
     }
     const fd = new FormData();
-    fd.append("file", file);
+    // HTTP multipart headers only allow ISO-8859-1 — Cyrillic/CJK filenames crash fetch.
+    // Pass the file bytes as a Blob with a safe ASCII name; the real name goes separately.
+    const ext = file.name.slice(file.name.lastIndexOf(".")) || "";
+    const safeName = "upload" + ext;
+    fd.append("file", new Blob([await file.arrayBuffer()], { type: file.type || "application/octet-stream" }), safeName);
+    fd.append("original_name", file.name);
     const r = await fetch("/api/extract", { method: "POST", body: fd }).then((x) => x.json());
     if (r.error) throw new Error(r.error);
-    return r;
+    return { ...r, source_file: r.source_file || file.name };
   }
 
   async function saveTripData(data, sourceFile) {
