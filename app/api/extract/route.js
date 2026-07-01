@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { fileToImages, fileToText } from "../../../lib/parse";
 import { extractTrip, extractTripFromImage, extractTripFromPdf } from "../../../lib/openai";
-import { extractTripFromPdfGemini } from "../../../lib/gemini";
 import { extractPdfImages } from "../../../lib/pdfImages";
 import { applyDayText, applyMealMarks, extractPdfFacts } from "../../../lib/pdfMeals";
 
@@ -29,29 +28,9 @@ function assignPhotos(trip, extractedImages) {
   }
 }
 
-function hasWeakDayText(trip) {
-  const days = trip?.days || [];
-  if (days.length < 2) return false;
-
-  const daysWithRoutes = days.filter((day) => String(day.route || "").trim()).length;
-  const daysWithText = days.filter((day) => String(day.summary || "").trim().length >= 20).length;
-
-  return daysWithRoutes >= 2 && daysWithText < Math.ceil(days.length * 0.75);
-}
-
-// Extract trip from PDF: Gemini first (faster, smarter on layout), OpenAI as fallback
+// Extract trip from PDF with OpenAI vision directly. Gemini was fast on some files,
+// but failed quality checks often enough to waste most of Vercel's 60s request budget.
 async function extractPdfTrip(b64, filename) {
-  if (process.env.GEMINI_API_KEY) {
-    try {
-      const trip = await extractTripFromPdfGemini(b64, filename);
-      if (hasWeakDayText(trip)) {
-        throw new Error("Gemini returned day routes but too little day text");
-      }
-      return trip;
-    } catch (err) {
-      console.warn("Gemini PDF extract failed, trying OpenAI:", err.message);
-    }
-  }
   return extractTripFromPdf(b64, filename).catch(async (visionErr) => {
     console.warn("OpenAI PDF vision failed, falling back to text:", visionErr.message);
     throw visionErr;
