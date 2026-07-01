@@ -8,9 +8,16 @@ export const maxDuration = 60;
 // Returns { url } so the client can pass it to /api/extract.
 export async function POST(req) {
   try {
-    const filename = req.headers.get("x-filename") || "upload";
+    // Client URL-encodes the filename (Cyrillic/CJK aren't valid raw header values).
+    const rawHeader = req.headers.get("x-filename") || "upload";
+    let filename;
+    try { filename = decodeURIComponent(rawHeader); } catch { filename = rawHeader; }
+    // Blob storage keys must be ASCII — keep the extension, replace the rest with a safe stub.
+    const ext = filename.slice(filename.lastIndexOf(".")) || "";
+    const safeKey = /^[\x20-\x7e]*$/.test(filename) ? filename : `upload${ext}`;
+
     const contentType = req.headers.get("content-type") || "application/octet-stream";
-    const blob = await put(filename, req.body, {
+    const blob = await put(safeKey, req.body, {
       access: "public",
       contentType,
       addRandomSuffix: true,

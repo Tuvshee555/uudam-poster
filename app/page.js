@@ -405,19 +405,22 @@ export default function Home() {
     // Files >3MB go via Vercel Blob to avoid the 4.5MB function payload limit
     const DIRECT_LIMIT = 3 * 1024 * 1024;
     if (file.size > DIRECT_LIMIT) {
+      // HTTP headers only allow ISO-8859-1 — Cyrillic/CJK filenames crash a raw header.
+      // encodeURIComponent makes it ASCII-safe; the server decodes it back.
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
-        headers: { "x-filename": file.name, "Content-Type": file.type || "application/octet-stream" },
+        headers: { "x-filename": encodeURIComponent(file.name), "Content-Type": file.type || "application/octet-stream" },
         body: file,
       }).then((x) => x.json());
       if (uploadRes.error) throw new Error(uploadRes.error);
+      // fileName goes in the JSON body here, which is UTF-8 safe — no encoding needed
       const r = await fetch("/api/extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ blobUrl: uploadRes.url, fileName: file.name, mimeType: file.type }),
       }).then((x) => x.json());
       if (r.error) throw new Error(r.error);
-      return r;
+      return { ...r, source_file: r.source_file || file.name };
     }
     const fd = new FormData();
     // HTTP multipart headers only allow ISO-8859-1 — Cyrillic/CJK filenames crash fetch.
