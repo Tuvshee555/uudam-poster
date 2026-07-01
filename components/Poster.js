@@ -14,10 +14,11 @@ function Ed({ value = "", onChange, as = "span", className, placeholder }) {
   const Tag = as;
   const ref = useRef(null);
   const stringValue = String(value ?? "");
+  const html = escapeHtml(stringValue);
 
   useEffect(() => {
     const node = ref.current;
-    if (!node || document.activeElement === node) return;
+    if (!node || node.contains(document.activeElement)) return;
     if (node.innerText !== stringValue) node.innerText = stringValue;
   }, [stringValue]);
 
@@ -28,6 +29,7 @@ function Ed({ value = "", onChange, as = "span", className, placeholder }) {
       contentEditable
       suppressContentEditableWarning
       data-placeholder={placeholder || ""}
+      dangerouslySetInnerHTML={{ __html: html }}
       onBlur={(e) => {
         const txt = e.currentTarget.innerText.trim();
         if (txt !== value) onChange(txt);
@@ -73,15 +75,15 @@ function splitSummary(text) {
 function BulletEd({ value, onChange, className, placeholder }) {
   const listRef = useRef(null);
   const bullets = splitSummary(value);
+  const html = bullets.length
+    ? bullets.map((s) => `<li>${escapeHtml(s)}</li>`).join("")
+    : `<li data-placeholder="${escapeHtml(placeholder || "")}"></li>`;
 
   useEffect(() => {
     const node = listRef.current;
-    if (!node || document.activeElement === node) return;
-    const html = bullets.length
-      ? bullets.map((s) => `<li>${escapeHtml(s)}</li>`).join("")
-      : `<li data-placeholder="${escapeHtml(placeholder || "")}"></li>`;
+    if (!node || node.contains(document.activeElement)) return;
     if (node.innerHTML !== html) node.innerHTML = html;
-  }, [bullets, placeholder]);
+  }, [html]);
 
   const emit = () => {
     if (!listRef.current) return;
@@ -100,6 +102,7 @@ function BulletEd({ value, onChange, className, placeholder }) {
       contentEditable
       suppressContentEditableWarning
       onBlur={emit}
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }
@@ -129,7 +132,7 @@ function PriceNoteEd({ note, onChange }) {
 
   useEffect(() => {
     const node = ref.current;
-    if (!node || document.activeElement === node) return;
+    if (!node || node.contains(document.activeElement)) return;
     if (node.innerHTML !== html) node.innerHTML = html;
   }, [html]);
 
@@ -140,6 +143,7 @@ function PriceNoteEd({ note, onChange }) {
       contentEditable
       suppressContentEditableWarning
       onBlur={(e) => onChange(e.currentTarget.innerText)}
+      dangerouslySetInnerHTML={{ __html: html }}
     />
   );
 }
