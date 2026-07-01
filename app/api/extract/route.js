@@ -29,11 +29,25 @@ function assignPhotos(trip, extractedImages) {
   }
 }
 
+function hasWeakDayText(trip) {
+  const days = trip?.days || [];
+  if (days.length < 2) return false;
+
+  const daysWithRoutes = days.filter((day) => String(day.route || "").trim()).length;
+  const daysWithText = days.filter((day) => String(day.summary || "").trim().length >= 20).length;
+
+  return daysWithRoutes >= 2 && daysWithText < Math.ceil(days.length * 0.75);
+}
+
 // Extract trip from PDF: Gemini first (faster, smarter on layout), OpenAI as fallback
 async function extractPdfTrip(b64, filename) {
   if (process.env.GEMINI_API_KEY) {
     try {
-      return await extractTripFromPdfGemini(b64, filename);
+      const trip = await extractTripFromPdfGemini(b64, filename);
+      if (hasWeakDayText(trip)) {
+        throw new Error("Gemini returned day routes but too little day text");
+      }
+      return trip;
     } catch (err) {
       console.warn("Gemini PDF extract failed, trying OpenAI:", err.message);
     }
