@@ -1,11 +1,29 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 function Ed({ value = "", onChange, as = "span", className, placeholder }) {
   const Tag = as;
+  const ref = useRef(null);
+  const stringValue = String(value ?? "");
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || document.activeElement === node) return;
+    if (node.innerText !== stringValue) node.innerText = stringValue;
+  }, [stringValue]);
+
   return (
     <Tag
+      ref={ref}
       className={className}
       contentEditable
       suppressContentEditableWarning
@@ -14,9 +32,7 @@ function Ed({ value = "", onChange, as = "span", className, placeholder }) {
         const txt = e.currentTarget.innerText.trim();
         if (txt !== value) onChange(txt);
       }}
-    >
-      {value}
-    </Tag>
+    />
   );
 }
 
@@ -58,6 +74,15 @@ function BulletEd({ value, onChange, className, placeholder }) {
   const listRef = useRef(null);
   const bullets = splitSummary(value);
 
+  useEffect(() => {
+    const node = listRef.current;
+    if (!node || document.activeElement === node) return;
+    const html = bullets.length
+      ? bullets.map((s) => `<li>${escapeHtml(s)}</li>`).join("")
+      : `<li data-placeholder="${escapeHtml(placeholder || "")}"></li>`;
+    if (node.innerHTML !== html) node.innerHTML = html;
+  }, [bullets, placeholder]);
+
   const emit = () => {
     if (!listRef.current) return;
     const items = Array.from(listRef.current.querySelectorAll("li"));
@@ -75,13 +100,47 @@ function BulletEd({ value, onChange, className, placeholder }) {
       contentEditable
       suppressContentEditableWarning
       onBlur={emit}
-    >
-      {bullets.length ? (
-        bullets.map((s, i) => <li key={i}>{s}</li>)
-      ) : (
-        <li data-placeholder={placeholder || ""} />
-      )}
-    </ul>
+    />
+  );
+}
+
+function priceNoteHtml(note) {
+  const lines = String(note || "").split(/\n+/).map((line) => line.trim()).filter(Boolean);
+  const title = lines.length > 1 && /[:：]$/.test(lines[0]) ? lines[0].replace(/[:：]$/, "") : "";
+  const items = title ? lines.slice(1) : lines;
+
+  if (title) {
+    return [
+      `<div class="price-note-title">${escapeHtml(title)}:</div>`,
+      `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`,
+    ].join("");
+  }
+
+  if (items.length > 1) {
+    return `<ul>${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+  }
+
+  return `<div class="price-note-line">⚠ ${escapeHtml(items[0] || "")}</div>`;
+}
+
+function PriceNoteEd({ note, onChange }) {
+  const ref = useRef(null);
+  const html = priceNoteHtml(note);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node || document.activeElement === node) return;
+    if (node.innerHTML !== html) node.innerHTML = html;
+  }, [html]);
+
+  return (
+    <div
+      ref={ref}
+      className="price-note-content"
+      contentEditable
+      suppressContentEditableWarning
+      onBlur={(e) => onChange(e.currentTarget.innerText)}
+    />
   );
 }
 
@@ -324,10 +383,6 @@ export default function Poster({
             {priceNoteBoxes.length ? (
               <div className="price-note-boxes">
                 {priceNoteBoxes.map((note, ni) => {
-                  const lines = note.split(/\n+/).map((line) => line.trim()).filter(Boolean);
-                  const title = lines.length > 1 && /[:：]$/.test(lines[0]) ? lines[0].replace(/[:：]$/, "") : "";
-                  const items = title ? lines.slice(1) : lines;
-
                   return (
                     <div className="price-note-box" key={`${note}-${ni}`}>
                       <button
@@ -338,21 +393,7 @@ export default function Poster({
                       >
                         ×
                       </button>
-                      <div
-                        className="price-note-content"
-                        contentEditable
-                        suppressContentEditableWarning
-                        onBlur={(e) => updatePriceNoteBox(t, priceTable, note, e.currentTarget.innerText, upd)}
-                      >
-                        {title ? <div className="price-note-title">{title}:</div> : null}
-                        {items.length > 1 ? (
-                          <ul>
-                            {items.map((item, ii) => <li key={ii}>{item}</li>)}
-                          </ul>
-                        ) : (
-                          <div className="price-note-line">⚠ {items[0]}</div>
-                        )}
-                      </div>
+                      <PriceNoteEd note={note} onChange={(value) => updatePriceNoteBox(t, priceTable, note, value, upd)} />
                     </div>
                   );
                 })}
