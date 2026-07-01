@@ -18,6 +18,55 @@ const MESSENGER_MAX_IMAGE_SLICES = 3;
 const MAX_UPLOAD_FILES = 10;
 const MAX_UPLOAD_SIZE_MB = 100;
 const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+const TRANSPARENT_IMAGE_PLACEHOLDER =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+const EXTRACT_TIMEOUT_MS = 90_000; // server maxDuration is 60s; give network slack then give up
+
+// If the Vercel function times out mid-request, the connection can hang instead of
+// cleanly erroring — without this, the "уншиж байна" spinner can get stuck forever.
+async function fetchJsonWithTimeout(url, options, timeoutMs = EXTRACT_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    const text = await res.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+    if (!res.ok) {
+      throw new Error(data?.error || text || `HTTP ${res.status}`);
+    }
+    return data || {};
+  } catch (error) {
+    if (error.name === "AbortError") throw new Error(`Хүсэлт хэт удаж, зогслоо (${timeoutMs / 1000}s). Дахин оролдоно уу.`);
+    throw error;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function errorMessage(error, fallback = "Алдаа гарлаа. Дахин оролдоно уу.") {
+  if (!error) return fallback;
+  if (typeof error === "string") return error;
+  if (error instanceof Error && error.message) return error.message;
+  if (error instanceof Event) {
+    const target = error.target;
+    const src = target?.currentSrc || target?.src;
+    return src ? `Зураг ачаалж чадсангүй: ${src}` : fallback;
+  }
+  if (typeof error.message === "string") return error.message;
+  if (String(error) === "[object Event]") return fallback;
+  try {
+    const json = JSON.stringify(error);
+    return json && json !== "{}" ? json : fallback;
+  } catch {
+    return String(error);
+  }
+}
 
 function setPath(obj, path, value) {
   const clone = structuredClone(obj);
@@ -38,7 +87,7 @@ function resizeImage(file, maxW = 1500) {
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
       resolve(c.toDataURL("image/jpeg", 0.82));
     };
-    img.onerror = reject;
+    img.onerror = () => reject(new Error("Зураг уншиж чадсангүй. Өөр JPG/PNG зураг ашиглаад дахин оролдоно уу."));
     img.src = URL.createObjectURL(file);
   });
 }
@@ -414,11 +463,11 @@ export default function Home() {
         contentType: file.type || "application/octet-stream",
       });
       // fileName goes in the JSON body here, which is UTF-8 safe — no encoding needed
-      const r = await fetch("/api/extract", {
+      const r = await fetchJsonWithTimeout("/api/extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ blobUrl: blob.url, fileName: file.name, mimeType: file.type }),
-      }).then((x) => x.json());
+      });
       if (r.error) throw new Error(r.error);
       return { ...r, source_file: r.source_file || file.name };
     }
@@ -429,7 +478,7 @@ export default function Home() {
     const safeName = "upload" + ext;
     fd.append("file", new Blob([await file.arrayBuffer()], { type: file.type || "application/octet-stream" }), safeName);
     fd.append("original_name", file.name);
-    const r = await fetch("/api/extract", { method: "POST", body: fd }).then((x) => x.json());
+    const r = await fetchJsonWithTimeout("/api/extract", { method: "POST", body: fd });
     if (r.error) throw new Error(r.error);
     return { ...r, source_file: r.source_file || file.name };
   }
@@ -493,7 +542,7 @@ export default function Home() {
         saved.push({ file: file.name, trip, id });
       } catch (e) {
         console.error("file failed:", file.name, e);
-        failed.push({ file: file.name, error: String(e.message || e) });
+        failed.push({ file: file.name, error: errorMessage(e) });
       }
     }
 
@@ -509,7 +558,7 @@ export default function Home() {
 
     const messages = [...warnings];
     if (failed.length > 0) {
-      messages.push(`${failed.length} файл уншихад алдаа гарлаа: ${failed.map((f) => f.file).join(", ")}`);
+      messages.push(`${failed.length} файл уншихад алдаа гарлаа: ${failed.map((f) => `${f.file}: ${f.error}`).join("; ")}`);
     }
     if (messages.length > 0) setError(messages.join(" "));
   }
@@ -541,6 +590,8 @@ export default function Home() {
       width: node.offsetWidth,
       height: node.offsetHeight,
       backgroundColor: "#ffffff",
+      cacheBust: true,
+      imagePlaceholder: TRANSPARENT_IMAGE_PLACEHOLDER,
       style: { transform: "none", margin: "0", boxShadow: "none" },
       filter: (domNode) => !domNode.classList?.contains("editor-only") && !domNode.classList?.contains("hidden-input"),
     });
@@ -553,6 +604,18 @@ export default function Home() {
     } finally {
       document.body.classList.remove("exporting");
     }
+  }
+
+  async function downloadDataUrl(dataUrl, filename) {
+    const blob = await fetch(dataUrl).then((response) => response.blob());
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
   }
 
   function buildExportBaseName() {
@@ -640,7 +703,7 @@ export default function Home() {
     const fullImage = await new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
-      img.onerror = reject;
+      img.onerror = () => reject(new Error("Messenger зураг хуваах үед poster зураг уншиж чадсангүй."));
       img.src = fullUrl;
     });
 
@@ -700,7 +763,7 @@ export default function Home() {
         setSyncMatch({ candidates: match.candidates || [], allTrips: match.allTrips || [] });
       }
     } catch (e) {
-      setSyncError(String(e?.message || e));
+      setSyncError(errorMessage(e));
     } finally {
       setSyncLoading(false);
     }
@@ -724,7 +787,7 @@ export default function Home() {
         setSyncResult(out);
       }
     } catch (e) {
-      setSyncError(String(e?.message || e));
+      setSyncError(errorMessage(e));
     } finally {
       setSyncLoading(false);
     }
@@ -743,14 +806,11 @@ export default function Home() {
         const baseName = buildExportBaseName();
 
         for (const item of captures) {
-          const a = document.createElement("a");
-          a.href = item.url;
-          a.download = `${baseName}-messenger-${item.index + 1}.png`;
-          a.click();
+          await downloadDataUrl(item.url, `${baseName}-messenger-${item.index + 1}.png`);
         }
       });
     } catch (e) {
-      setError(String(e.message || e));
+      setError(errorMessage(e));
     } finally {
       setBusy("");
     }
@@ -781,7 +841,7 @@ export default function Home() {
         setTimeout(() => URL.revokeObjectURL(zipUrl), 1000);
       });
     } catch (e) {
-      setError(String(e.message || e));
+      setError(errorMessage(e));
     } finally {
       setBusy("");
     }
@@ -794,14 +854,11 @@ export default function Home() {
         const nodes = [page1Ref.current].filter(Boolean);
         for (let i = 0; i < nodes.length; i++) {
           const url = await capture(nodes[i]);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `${(trip.title || "poster").slice(0, 30)}-${i + 1}.png`;
-          a.click();
+          await downloadDataUrl(url, `${(trip.title || "poster").slice(0, 30)}-${i + 1}.png`);
         }
       });
     } catch (e) {
-      setError(String(e.message || e));
+      setError(errorMessage(e));
     } finally {
       setBusy("");
     }
@@ -825,7 +882,7 @@ export default function Home() {
         pdf.save(`${(trip.title || "poster").slice(0, 30)}.pdf`);
       });
     } catch (e) {
-      setError(String(e.message || e));
+      setError(errorMessage(e));
     } finally {
       setBusy("");
     }
@@ -845,7 +902,7 @@ export default function Home() {
         return normalizeTripData(clone);
       });
     } catch (e) {
-      setError(String(e.message || e));
+      setError(errorMessage(e));
     } finally {
       setBusy("");
       if (dayPhotoInputRefs.current[index]) dayPhotoInputRefs.current[index].value = "";
@@ -874,7 +931,7 @@ export default function Home() {
         setError(`Ижил нэртэй ${matchingTitles.length} хадгалсан аялал байна: "${cleanTrip.title}"`);
       }
     } catch (e) {
-      setError(String(e.message || e));
+      setError(errorMessage(e));
     } finally {
       setBusy("");
     }
@@ -889,7 +946,7 @@ export default function Home() {
       setTripId(r.trip.id);
       setSource(r.trip.source_file || "");
     } catch (e) {
-      setError(String(e.message || e));
+      setError(errorMessage(e));
     } finally {
       setBusy("");
     }
@@ -909,7 +966,7 @@ export default function Home() {
       if (r.error) throw new Error(r.error);
     } catch (e) {
       setHistory(previousHistory);
-      setError(String(e.message || e));
+      setError(errorMessage(e));
     }
   }
 
