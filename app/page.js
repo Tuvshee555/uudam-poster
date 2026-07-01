@@ -456,7 +456,8 @@ export default function Home() {
     // Files above that go straight from the browser to Vercel Blob (client upload,
     // never touches our function), then we hand the resulting URL to /api/extract.
     const DIRECT_LIMIT = 4 * 1024 * 1024;
-    if (file.size > DIRECT_LIMIT) {
+    const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+    if (file.size > DIRECT_LIMIT && !isLocalhost) {
       const blob = await upload(file.name, file, {
         access: "public",
         handleUploadUrl: "/api/upload",
