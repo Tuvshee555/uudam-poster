@@ -235,6 +235,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [scale, setScale] = useState(0.6);
   const [totalH, setTotalH] = useState(0);
+  const [activeDayPhotoIndex, setActiveDayPhotoIndex] = useState(null);
 
   // Chatbot sync modal state
   const [syncOpen, setSyncOpen] = useState(false);
@@ -297,6 +298,7 @@ export default function Home() {
     setTrip(normalizeTripData(createDefaultTrip()));
     setTripId(null);
     setSource("Default template");
+    setActiveDayPhotoIndex(null);
   };
 
   const addItem = (path, value) =>
@@ -879,6 +881,7 @@ export default function Home() {
         if (!day.photo_caption) day.photo_caption = day.summary || day.route || "";
         return normalizeTripData(clone);
       });
+      setActiveDayPhotoIndex(index);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -886,6 +889,35 @@ export default function Home() {
       if (dayPhotoInputRefs.current[index]) dayPhotoInputRefs.current[index].value = "";
     }
   }
+
+  useEffect(() => {
+    if (!trip || activeDayPhotoIndex === null) return undefined;
+
+    const onPaste = async (event) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT")
+      ) {
+        return;
+      }
+
+      const items = Array.from(event.clipboardData?.items || []);
+      const imageItem = items.find((item) => item.type?.startsWith("image/"));
+      const file = imageItem?.getAsFile();
+      if (!file) return;
+
+      event.preventDefault();
+      setError("");
+      await onDayPhotoFile(activeDayPhotoIndex, file);
+    };
+
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [trip, activeDayPhotoIndex]);
 
   async function save() {
     setError("");
@@ -923,6 +955,7 @@ export default function Home() {
       setTrip(normalizeTripData(r.trip.data));
       setTripId(r.trip.id);
       setSource(r.trip.source_file || "");
+      setActiveDayPhotoIndex(null);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -1069,6 +1102,8 @@ export default function Home() {
                     page1Ref={page1Ref}
                     onDayPhotoFile={onDayPhotoFile}
                     dayPhotoInputRefs={dayPhotoInputRefs}
+                    activeDayPhotoIndex={activeDayPhotoIndex}
+                    setActiveDayPhotoIndex={setActiveDayPhotoIndex}
                   />
                 </div>
               </div>

@@ -282,6 +282,8 @@ export default function Poster({
   page1Ref,
   onDayPhotoFile,
   dayPhotoInputRefs,
+  activeDayPhotoIndex,
+  setActiveDayPhotoIndex,
 }) {
   const priceTable = getPriceTable(t);
   const priceNoteBoxes = getPriceNoteBoxes(t, priceTable);
@@ -492,19 +494,25 @@ export default function Poster({
                       {d.photo ? (
                         <button
                           type="button"
-                          className="dphoto clickable filled"
+                          className={"dphoto clickable filled" + (activeDayPhotoIndex === i ? " selected" : "")}
                           style={{
                             backgroundImage: `linear-gradient(180deg, rgba(12, 27, 43, 0.08), rgba(12, 27, 43, 0.38)), url(${d.photo})`,
                           }}
-                          onClick={() => dayPhotoInputRefs.current?.[i]?.click()}
+                          onClick={() => {
+                            setActiveDayPhotoIndex(i);
+                            dayPhotoInputRefs.current?.[i]?.click();
+                          }}
                         >
                           <span className="editor-only photohint">Дарж зураг солино</span>
                         </button>
                       ) : (
                         <button
                           type="button"
-                          className="dphoto editor-only dphoto-empty"
-                          onClick={() => dayPhotoInputRefs.current?.[i]?.click()}
+                          className={"dphoto editor-only dphoto-empty" + (activeDayPhotoIndex === i ? " selected" : "")}
+                          onClick={() => {
+                            setActiveDayPhotoIndex(i);
+                            dayPhotoInputRefs.current?.[i]?.click();
+                          }}
                         >
                           <span className="dphoto-add-label">+ Зураг нэмэх</span>
                         </button>
@@ -528,6 +536,13 @@ export default function Poster({
                             Фото авах
                           </button>
                         )}
+                        <button
+                          type="button"
+                          className={"addbtn" + (activeDayPhotoIndex === i ? " active" : "")}
+                          onClick={() => setActiveDayPhotoIndex(i)}
+                        >
+                          {activeDayPhotoIndex === i ? "Ctrl+V ready" : "Paste photo"}
+                        </button>
                         <button type="button" className="addbtn" onClick={() => insertDay(i)}>
                           + Дараа өдөр
                         </button>
