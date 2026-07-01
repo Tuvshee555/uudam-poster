@@ -18,6 +18,7 @@ const MESSENGER_MAX_IMAGE_SLICES = 3;
 const MAX_UPLOAD_FILES = 10;
 const MAX_UPLOAD_SIZE_MB = 100;
 const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+const SERVERLESS_DIRECT_UPLOAD_LIMIT = 4 * 1024 * 1024;
 const TRANSPARENT_IMAGE_PLACEHOLDER =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 
@@ -66,6 +67,11 @@ function errorMessage(error, fallback = "Алдаа гарлаа. Дахин о�
   } catch {
     return String(error);
   }
+}
+
+function isLocalUploadEnvironment() {
+  if (typeof window === "undefined") return false;
+  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
 }
 
 function setPath(obj, path, value) {
@@ -455,14 +461,18 @@ export default function Home() {
     // Vercel serverless functions cap request bodies at 4.5MB no matter the plan.
     // Files above that go straight from the browser to Vercel Blob (client upload,
     // never touches our function), then we hand the resulting URL to /api/extract.
-    const DIRECT_LIMIT = 4 * 1024 * 1024;
-    const isLocalhost = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-    if (file.size > DIRECT_LIMIT && !isLocalhost) {
-      const blob = await upload(file.name, file, {
-        access: "public",
-        handleUploadUrl: "/api/upload",
-        contentType: file.type || "application/octet-stream",
-      });
+    const useBlobUpload = !isLocalUploadEnvironment() && file.size > SERVERLESS_DIRECT_UPLOAD_LIMIT;
+    if (useBlobUpload) {
+      let blob;
+      try {
+        blob = await upload(file.name, file, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+          contentType: file.type || "application/octet-stream",
+        });
+      } catch (error) {
+        throw new Error(`Vercel Blob upload failed: ${errorMessage(error)}`);
+      }
       // fileName goes in the JSON body here, which is UTF-8 safe — no encoding needed
       const r = await fetchJsonWithTimeout("/api/extract", {
         method: "POST",
