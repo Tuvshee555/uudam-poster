@@ -666,25 +666,83 @@ export default function Home() {
     if (sliceCount === 2) return [chooseMessengerSplitPoint(node)];
 
     const totalHeight = node.offsetHeight;
+    const minY = totalHeight * 0.12;
+    const maxY = totalHeight * 0.94;
+    const minSliceHeight = totalHeight * 0.12;
+    const idealSliceHeight = totalHeight / sliceCount;
     const candidates = [];
+
+    const addCandidate = (point, weight = 0) => {
+      if (!Number.isFinite(point) || point <= minY || point >= maxY) return;
+      const rounded = Math.round(point);
+      const existing = candidates.find((candidate) => Math.abs(candidate.point - rounded) < 8);
+      if (existing) {
+        existing.weight = Math.min(existing.weight, weight);
+        return;
+      }
+      candidates.push({ point: rounded, weight });
+    };
+
     node.querySelectorAll(".dayrow,.program-head,.sec.compact-sec,.foot").forEach((el) => {
       const top = getRelativeTop(el, node);
-      if (top > totalHeight * 0.18 && top < totalHeight * 0.88) candidates.push(top);
+      const bottom = top + el.getBoundingClientRect().height;
+      const isDay = el.classList.contains("dayrow");
+      const isProgramHead = el.classList.contains("program-head");
+
+      // Prefer starting a new Messenger image cleanly at the next day. If a day
+      // is unusually tall, its bottom edge is still better than cutting text.
+      addCandidate(top, isDay ? 0 : isProgramHead ? 12 : 6);
+      if (isDay) addCandidate(bottom, 2);
     });
 
-    const points = [];
-    for (let i = 1; i < sliceCount; i++) {
-      const target = (totalHeight * i) / sliceCount;
-      const minGap = totalHeight * 0.18;
-      const eligible = candidates.filter((point) => points.every((existing) => Math.abs(existing - point) > minGap));
-      const best = (eligible.length ? eligible : candidates).reduce((currentBest, current) =>
-        Math.abs(current - target) < Math.abs(currentBest - target) ? current : currentBest,
-        target
+    if (candidates.length < sliceCount - 1) {
+      return Array.from({ length: sliceCount - 1 }, (_, index) =>
+        Math.round((totalHeight * (index + 1)) / sliceCount)
       );
-      points.push(best);
     }
 
-    return points.sort((a, b) => a - b).map(Math.round);
+    const sortedCandidates = candidates.sort((a, b) => a.point - b.point);
+    let bestPoints = null;
+    let bestScore = Infinity;
+
+    for (let firstIndex = 0; firstIndex < sortedCandidates.length; firstIndex++) {
+      for (let secondIndex = firstIndex + 1; secondIndex < sortedCandidates.length; secondIndex++) {
+        const selected = [sortedCandidates[firstIndex], sortedCandidates[secondIndex]];
+        const points = selected.map((candidate) => candidate.point);
+        const ranges = [points[0], points[1] - points[0], totalHeight - points[1]];
+        if (ranges.some((height) => height < minSliceHeight)) continue;
+
+        const targetPenalty = points.reduce((sum, point, index) => {
+          const target = (totalHeight * (index + 1)) / sliceCount;
+          return sum + Math.abs(point - target) / idealSliceHeight;
+        }, 0);
+        const balancePenalty = ranges.reduce(
+          (sum, height) => sum + Math.abs(height - idealSliceHeight) / idealSliceHeight,
+          0
+        );
+        const oversizePenalty = ranges.reduce(
+          (sum, height) => sum + Math.max(0, height - MESSENGER_SINGLE_IMAGE_MAX_HEIGHT) / idealSliceHeight,
+          0
+        );
+        const boundaryPenalty = selected.reduce((sum, candidate) => sum + candidate.weight, 0) / 20;
+        const score = targetPenalty * 2 + balancePenalty + oversizePenalty * 4 + boundaryPenalty;
+
+        if (score < bestScore) {
+          bestScore = score;
+          bestPoints = points;
+        }
+      }
+    }
+
+    if (bestPoints) return bestPoints;
+
+    return Array.from({ length: sliceCount - 1 }, (_, index) => {
+      const target = (totalHeight * (index + 1)) / sliceCount;
+      const best = sortedCandidates.reduce((currentBest, current) =>
+        Math.abs(current.point - target) < Math.abs(currentBest.point - target) ? current : currentBest
+      );
+      return best.point;
+    }).sort((a, b) => a - b);
   }
 
   function drawMessengerBadge(ctx, width, height, index, total) {
