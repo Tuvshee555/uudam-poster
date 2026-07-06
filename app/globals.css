@@ -206,11 +206,13 @@ body.exporting .page .dsummary.prose li:empty{display:none !important}
 .page .dphoto{width:100%;height:100%;min-height:200px;border-radius:0;border:none;background:#f5f8fc;background-size:cover,100% 100%;background-position:center;background-repeat:no-repeat;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:flex-start;padding:12px;color:#56728f;font-size:13px;font-weight:700;cursor:pointer}
 .page .dphoto.filled{color:#fff}
 .page .dphoto.dphoto-empty{min-height:120px;background:#f8fafc;border-left:2px dashed #c8d8e8;align-items:center;justify-content:center;padding:0;border-radius:0}
+.page .dphoto.selected{box-shadow:inset 0 0 0 3px var(--gold)}
 .page .dphoto-add-label{font-size:12px;font-weight:700;color:#7a9ab8}
 .page .dphoto .photohint{display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(12,27,43,.42);color:#fff;font-size:11px;font-weight:700}
 
 .page .daytools{display:flex;flex-wrap:wrap;gap:8px}
 .addbtn{font-size:12px;color:var(--navy-soft);cursor:pointer;border:1px dashed #b9c6d8;background:#fff;border-radius:999px;padding:6px 10px;display:inline-flex;align-items:center;justify-content:center}
+.addbtn.active{border-style:solid;border-color:var(--gold);background:#fff8e8;color:var(--navy)}
 .addbtn.danger{color:var(--danger);border-color:#efc4bf}
 .hidden-input{display:none}
 .removebtn{width:20px;height:20px;border-radius:50%;border:1px solid #d9e1ea;background:#fff;color:var(--danger);font-size:14px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:none;opacity:0;transition:opacity .12s}

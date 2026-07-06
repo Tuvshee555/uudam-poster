@@ -2,7 +2,6 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
-import { upload } from "@vercel/blob/client";
 import Poster from "../components/Poster";
 import { createDefaultTrip } from "../lib/defaultTrip";
 import SyncModal from "../components/SyncModal";
@@ -18,7 +17,6 @@ const MESSENGER_MAX_IMAGE_SLICES = 3;
 const MAX_UPLOAD_FILES = 10;
 const MAX_UPLOAD_SIZE_MB = 100;
 const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
-const SERVERLESS_DIRECT_UPLOAD_LIMIT = 4 * 1024 * 1024;
 const TRANSPARENT_IMAGE_PLACEHOLDER =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 
@@ -67,11 +65,6 @@ function errorMessage(error, fallback = "Алдаа гарлаа. Дахин о�
   } catch {
     return String(error);
   }
-}
-
-function isLocalUploadEnvironment() {
-  if (typeof window === "undefined") return false;
-  return ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname);
 }
 
 function setPath(obj, path, value) {
@@ -242,6 +235,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [scale, setScale] = useState(0.6);
   const [totalH, setTotalH] = useState(0);
+  const [activeDayPhotoIndex, setActiveDayPhotoIndex] = useState(null);
 
   // Chatbot sync modal state
   const [syncOpen, setSyncOpen] = useState(false);
@@ -304,6 +298,7 @@ export default function Home() {
     setTrip(normalizeTripData(createDefaultTrip()));
     setTripId(null);
     setSource("Default template");
+    setActiveDayPhotoIndex(null);
   };
 
   const addItem = (path, value) =>
@@ -458,33 +453,7 @@ export default function Home() {
   }
 
   async function extractOne(file) {
-    // Vercel serverless functions cap request bodies at 4.5MB no matter the plan.
-    // Files above that go straight from the browser to Vercel Blob (client upload,
-    // never touches our function), then we hand the resulting URL to /api/extract.
-    const useBlobUpload = !isLocalUploadEnvironment() && file.size > SERVERLESS_DIRECT_UPLOAD_LIMIT;
-    if (useBlobUpload) {
-      let blob;
-      try {
-        blob = await upload(file.name, file, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-          contentType: file.type || "application/octet-stream",
-        });
-      } catch (error) {
-        throw new Error(`Vercel Blob upload failed: ${errorMessage(error)}`);
-      }
-      // fileName goes in the JSON body here, which is UTF-8 safe — no encoding needed
-      const r = await fetchJsonWithTimeout("/api/extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blobUrl: blob.url, fileName: file.name, mimeType: file.type }),
-      });
-      if (r.error) throw new Error(r.error);
-      return { ...r, source_file: r.source_file || file.name };
-    }
     const fd = new FormData();
-    // HTTP multipart headers only allow ISO-8859-1 — Cyrillic/CJK filenames crash fetch.
-    // Pass the file bytes as a Blob with a safe ASCII name; the real name goes separately.
     const ext = file.name.slice(file.name.lastIndexOf(".")) || "";
     const safeName = "upload" + ext;
     fd.append("file", new Blob([await file.arrayBuffer()], { type: file.type || "application/octet-stream" }), safeName);
@@ -970,6 +939,7 @@ export default function Home() {
         if (!day.photo_caption) day.photo_caption = day.summary || day.route || "";
         return normalizeTripData(clone);
       });
+      setActiveDayPhotoIndex(index);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -977,6 +947,35 @@ export default function Home() {
       if (dayPhotoInputRefs.current[index]) dayPhotoInputRefs.current[index].value = "";
     }
   }
+
+  useEffect(() => {
+    if (!trip || activeDayPhotoIndex === null) return undefined;
+
+    const onPaste = async (event) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT")
+      ) {
+        return;
+      }
+
+      const items = Array.from(event.clipboardData?.items || []);
+      const imageItem = items.find((item) => item.type?.startsWith("image/"));
+      const file = imageItem?.getAsFile();
+      if (!file) return;
+
+      event.preventDefault();
+      setError("");
+      await onDayPhotoFile(activeDayPhotoIndex, file);
+    };
+
+    window.addEventListener("paste", onPaste);
+    return () => window.removeEventListener("paste", onPaste);
+  }, [trip, activeDayPhotoIndex]);
 
   async function save() {
     setError("");
@@ -1014,6 +1013,7 @@ export default function Home() {
       setTrip(normalizeTripData(r.trip.data));
       setTripId(r.trip.id);
       setSource(r.trip.source_file || "");
+      setActiveDayPhotoIndex(null);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -1160,6 +1160,8 @@ export default function Home() {
                     page1Ref={page1Ref}
                     onDayPhotoFile={onDayPhotoFile}
                     dayPhotoInputRefs={dayPhotoInputRefs}
+                    activeDayPhotoIndex={activeDayPhotoIndex}
+                    setActiveDayPhotoIndex={setActiveDayPhotoIndex}
                   />
                 </div>
               </div>
