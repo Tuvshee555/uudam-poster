@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { del, get } from "@vercel/blob";
 import { fileToImages, fileToText } from "../../../lib/parse";
-import { extractTrip, extractTripFromImage, extractTripFromPdf } from "../../../lib/openai";
-import {
-  extractTripFromImageGemini,
-  extractTripFromPdfGemini,
-  extractTripFromTextGemini,
-} from "../../../lib/gemini";
+import { extractTrip, extractTripFromImage, extractTripFromPdfPages } from "../../../lib/openai";
 import { extractPdfImages } from "../../../lib/pdfImages";
 import { applyDayText, applyMealMarks, extractPdfFacts } from "../../../lib/pdfMeals";
 
@@ -62,9 +57,8 @@ async function extractFromBuffer(buffer, filename, mime, originalName) {
   }
 
   if (name.endsWith(".pdf") || mime === "application/pdf") {
-    const b64 = buffer.toString("base64");
     const [trip, pdfImages, pdfFacts] = await Promise.all([
-      extractPdfTrip(b64, filename),
+      extractTripFromPdfPages(buffer, filename),
       extractPdfImages(buffer),
       extractPdfFacts(buffer),
     ]);
@@ -87,40 +81,12 @@ async function extractFromBuffer(buffer, filename, mime, originalName) {
   return NextResponse.json({ trip, source_file: originalName });
 }
 
-// Extract trip from PDF: Gemini first (faster, smarter on layout), OpenAI as fallback
-async function extractPdfTrip(b64, filename) {
-  if (process.env.GEMINI_API_KEY) {
-    try {
-      return await extractTripFromPdfGemini(b64, filename);
-    } catch (err) {
-      console.warn("Gemini PDF extract failed, trying OpenAI:", err.message);
-    }
-  }
-  return extractTripFromPdf(b64, filename);
-}
-
-// Same pattern for photos of documents: Gemini first, OpenAI as fallback.
 async function extractImageTrip(b64, mimeType) {
-  if (process.env.GEMINI_API_KEY) {
-    try {
-      return await extractTripFromImageGemini(b64, mimeType);
-    } catch (err) {
-      console.warn("Gemini image extract failed, trying OpenAI:", err.message);
-    }
-  }
   return extractTripFromImage(b64, mimeType);
 }
 
-// Plain text (docx/txt): OpenAI first (existing behavior), Gemini as fallback
-// so extraction keeps working when the OpenAI account is over quota.
 async function extractTextTrip(text) {
-  try {
-    return await extractTrip(text);
-  } catch (err) {
-    if (!process.env.GEMINI_API_KEY) throw err;
-    console.warn("OpenAI text extract failed, trying Gemini:", err.message);
-    return extractTripFromTextGemini(text);
-  }
+  return extractTrip(text);
 }
 
 export async function POST(req) {
