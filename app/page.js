@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import * as htmlToImage from "html-to-image";
+import { upload } from "@vercel/blob/client";
 import Poster from "../components/Poster";
 import { createDefaultTrip } from "../lib/defaultTrip";
 import SyncModal from "../components/SyncModal";
@@ -17,6 +18,7 @@ const MESSENGER_MAX_IMAGE_SLICES = 3;
 const MAX_UPLOAD_FILES = 10;
 const MAX_UPLOAD_SIZE_MB = 100;
 const MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024;
+const DIRECT_UPLOAD_LIMIT_BYTES = 4 * 1024 * 1024;
 const TRANSPARENT_IMAGE_PLACEHOLDER =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 
@@ -456,9 +458,33 @@ export default function Home() {
   }
 
   async function extractOne(file) {
-    const fd = new FormData();
     const ext = file.name.slice(file.name.lastIndexOf(".")) || "";
     const safeName = "upload" + ext;
+
+    if (file.size > DIRECT_UPLOAD_LIMIT_BYTES) {
+      const pathname = `trip-uploads/${Date.now()}-${crypto.randomUUID?.() || Math.random().toString(36).slice(2)}${ext || ".bin"}`;
+      const blob = await upload(pathname, file, {
+        access: "private",
+        handleUploadUrl: "/api/upload",
+        contentType: file.type || "application/octet-stream",
+        multipart: file.size > 8 * 1024 * 1024,
+      });
+
+      const r = await fetchJsonWithTimeout("/api/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          blob_url: blob.url,
+          pathname: blob.pathname || safeName,
+          original_name: file.name,
+          file_type: file.type || "application/octet-stream",
+        }),
+      });
+      if (r.error) throw new Error(r.error);
+      return { ...r, source_file: r.source_file || file.name };
+    }
+
+    const fd = new FormData();
     fd.append("file", new Blob([await file.arrayBuffer()], { type: file.type || "application/octet-stream" }), safeName);
     fd.append("original_name", file.name);
     const r = await fetchJsonWithTimeout("/api/extract", { method: "POST", body: fd });
