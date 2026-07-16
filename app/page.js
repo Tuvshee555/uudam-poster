@@ -78,16 +78,21 @@ function setPath(obj, path, value) {
 function resizeImage(file, maxW = 1500) {
   return new Promise((resolve, reject) => {
     const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
     img.onload = () => {
       const scale = Math.min(1, maxW / img.width);
       const c = document.createElement("canvas");
       c.width = Math.round(img.width * scale);
       c.height = Math.round(img.height * scale);
       c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(objectUrl);
       resolve(c.toDataURL("image/jpeg", 0.82));
     };
-    img.onerror = () => reject(new Error("Зураг уншиж чадсангүй. Өөр JPG/PNG зураг ашиглаад дахин оролдоно уу."));
-    img.src = URL.createObjectURL(file);
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Зураг уншиж чадсангүй. Өөр JPG/PNG зураг ашиглаад дахин оролдоно уу."));
+    };
+    img.src = objectUrl;
   });
 }
 
@@ -319,8 +324,6 @@ export default function Home() {
       return normalizeTripData(clone);
     });
 
-  const addDeparture = () => addItem(["departures"], { date: "Шинэ огноо" });
-
   const newDayObj = () => ({
     route: "Шинэ өдөр",
     distance_km: 0,
@@ -415,13 +418,6 @@ export default function Home() {
       return clone;
     });
 
-  const toggleFlights = () =>
-    setTrip((t) => {
-      const clone = structuredClone(t);
-      clone.flights = clone.flights ? null : { outbound: "MR855 УБ → Датун 16:30-18:10", return: "MR856 Датун → УБ 19:10-21:00" };
-      return clone;
-    });
-
   useLayoutEffect(() => {
     const fit = () => {
       const w = mainRef.current ? mainRef.current.clientWidth : POSTER_WIDTH;
@@ -437,8 +433,15 @@ export default function Home() {
   }, [trip, scale]);
 
   const loadHistory = async () => {
-    const r = await fetch("/api/trips").then((x) => x.json());
-    if (r.trips) setHistory(r.trips);
+    // Never throw — a failed history refresh must not break the upload flow
+    // (handleFiles awaits this after processing; an error here would leave the
+    // busy spinner stuck forever).
+    try {
+      const r = await fetch("/api/trips").then((x) => x.json());
+      if (r.trips) setHistory(r.trips);
+    } catch (e) {
+      console.warn("loadHistory failed:", e);
+    }
   };
 
   useEffect(() => {
@@ -500,11 +503,15 @@ export default function Home() {
     const seen = new Set();
     const uniqueFiles = [];
     for (const file of fileList) {
-      const hash = await sha256File(file);
-      if (seen.has(hash)) {
+      // crypto.subtle is unavailable on insecure (http) origins — skip dedupe then
+      let hash = null;
+      try {
+        hash = await sha256File(file);
+      } catch {}
+      if (hash && seen.has(hash)) {
         warnings.push(`${file.name} нөгөө файлтай ижиг агуулгатай байсан тул алгаслаа.`);
       } else {
-        seen.add(hash);
+        if (hash) seen.add(hash);
         uniqueFiles.push(file);
       }
     }
@@ -751,7 +758,9 @@ export default function Home() {
       Math.max(1, Math.ceil(totalHeight / MESSENGER_SINGLE_IMAGE_MAX_HEIGHT))
     );
     const splitPoints = chooseMessengerSplitPoints(node, sliceCount);
-    const ranges = [0, ...splitPoints, totalHeight].map((startY, index, points) => [startY, points[index + 1]]).filter((range) => range[1]);
+    const ranges = [0, ...splitPoints, totalHeight]
+      .map((startY, index, points) => [startY, points[index + 1]])
+      .filter((range) => Number.isFinite(range[1]) && range[1] > range[0]);
     const scaleY = fullImage.height / totalHeight;
 
     return ranges.map(([startY, endY], index) => {
@@ -1064,7 +1073,7 @@ export default function Home() {
               onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("over"); handleFiles(e.dataTransfer.files); }}
             >
               <label className="upload-strip-file">
-                <input type="file" multiple accept=".pdf,.docx,.txt,image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
+                <input type="file" multiple accept=".pdf,.docx,.txt,image/*" style={{ display: "none" }} onChange={(e) => { handleFiles(Array.from(e.target.files)); e.target.value = ""; }} />
                 <span className="upload-strip-ic">⬆</span>
                 <span className="upload-strip-label">Шинэ файл чирж тавих эсвэл дарах</span>
               </label>
@@ -1083,7 +1092,7 @@ export default function Home() {
                 onDragLeave={(e) => e.currentTarget.classList.remove("over")}
                 onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("over"); handleFiles(e.dataTransfer.files); }}
               >
-                <input type="file" multiple accept=".pdf,.docx,.txt,image/*" style={{ display: "none" }} onChange={(e) => handleFiles(e.target.files)} />
+                <input type="file" multiple accept=".pdf,.docx,.txt,image/*" style={{ display: "none" }} onChange={(e) => { handleFiles(Array.from(e.target.files)); e.target.value = ""; }} />
                 <div className="ic">⬆</div>
                 <div className="dt">Файл эсвэл зураг энд чирж тавь</div>
                 <div className="ds">{`Дээд тал нь ${MAX_UPLOAD_FILES} файл · тус бүр ${MAX_UPLOAD_SIZE_MB}MB хүртэл · Word (.docx), PDF, .txt · JPG, PNG, WEBP зураг`}</div>
@@ -1112,13 +1121,11 @@ export default function Home() {
                 </div>
 
                 <div className="studio-actions">
-                  <button type="button" onClick={addDeparture}>+ Огноо</button>
                   <button type="button" onClick={addDay}>+ Өдөр</button>
                   <button type="button" onClick={removeLastDay} disabled={(trip.days || []).length <= 1}>Сүүлийн өдөр устгах</button>
                   <button type="button" onClick={ensurePriceTable}>Үнийн хүснэгт асаах</button>
                   <button type="button" onClick={addPriceRow} disabled={!trip.price_table}>+ Үнэ мөр</button>
                   <button type="button" onClick={addPriceCol} disabled={!trip.price_table}>+ Үнэ багана</button>
-                  <button type="button" onClick={toggleFlights}>{trip.flights ? "Нислэг нуух" : "Нислэг нэмэх"}</button>
                 </div>
 
                 <div className="edit-hints">

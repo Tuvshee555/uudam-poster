@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { fileToImages, fileToText } from "../../../lib/parse";
 import { extractTrip, extractTripFromImage, extractTripFromPdf } from "../../../lib/openai";
-import { extractTripFromPdfGemini } from "../../../lib/gemini";
+import {
+  extractTripFromImageGemini,
+  extractTripFromPdfGemini,
+  extractTripFromTextGemini,
+} from "../../../lib/gemini";
 import { extractPdfImages } from "../../../lib/pdfImages";
 import { applyDayText, applyMealMarks, extractPdfFacts } from "../../../lib/pdfMeals";
 
@@ -39,11 +43,31 @@ async function extractPdfTrip(b64, filename) {
       console.warn("Gemini PDF extract failed, trying OpenAI:", err.message);
     }
   }
-  return extractTripFromPdf(b64, filename).catch(async (visionErr) => {
-    console.warn("OpenAI PDF vision failed, falling back to text:", visionErr.message);
-    // This fallback path only runs if both vision models fail
-    throw visionErr;
-  });
+  return extractTripFromPdf(b64, filename);
+}
+
+// Same pattern for photos of documents: Gemini first, OpenAI as fallback.
+async function extractImageTrip(b64, mimeType) {
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      return await extractTripFromImageGemini(b64, mimeType);
+    } catch (err) {
+      console.warn("Gemini image extract failed, trying OpenAI:", err.message);
+    }
+  }
+  return extractTripFromImage(b64, mimeType);
+}
+
+// Plain text (docx/txt): OpenAI first (existing behavior), Gemini as fallback
+// so extraction keeps working when the OpenAI account is over quota.
+async function extractTextTrip(text) {
+  try {
+    return await extractTrip(text);
+  } catch (err) {
+    if (!process.env.GEMINI_API_KEY) throw err;
+    console.warn("OpenAI text extract failed, trying Gemini:", err.message);
+    return extractTripFromTextGemini(text);
+  }
 }
 
 export async function POST(req) {
@@ -58,11 +82,14 @@ export async function POST(req) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const name = file.name.toLowerCase();
     const mime = file.type || "";
+    // The client uploads under an ASCII-safe name ("upload.pdf") and passes the
+    // real (often Cyrillic) filename separately — use that for history display.
+    const originalName = String(form.get("original_name") || file.name);
 
     if (IMAGE_TYPES.includes(mime) || /\.(jpe?g|png|webp|gif|bmp)$/.test(name)) {
       const b64 = buffer.toString("base64");
-      const trip = await extractTripFromImage(b64, mime || "image/jpeg");
-      return NextResponse.json({ trip, source_file: file.name });
+      const trip = await extractImageTrip(b64, mime || "image/jpeg");
+      return NextResponse.json({ trip, source_file: originalName });
     }
 
     if (name.endsWith(".pdf") || mime === "application/pdf") {
@@ -75,7 +102,7 @@ export async function POST(req) {
       applyDayText(trip, pdfFacts.days);
       applyMealMarks(trip, pdfFacts.meals);
       assignPhotos(trip, pdfImages);
-      return NextResponse.json({ trip, source_file: file.name });
+      return NextResponse.json({ trip, source_file: originalName });
     }
 
     // docx / txt
@@ -84,11 +111,11 @@ export async function POST(req) {
       return NextResponse.json({ error: "Could not read text from this file." }, { status: 422 });
     }
     const [trip, fileImages] = await Promise.all([
-      extractTrip(text),
+      extractTextTrip(text),
       fileToImages(buffer, file.name),
     ]);
     assignPhotos(trip, fileImages);
-    return NextResponse.json({ trip, source_file: file.name });
+    return NextResponse.json({ trip, source_file: originalName });
   } catch (e) {
     console.error("extract failed:", e);
     return NextResponse.json({ error: String(e.message || e) }, { status: 500 });
