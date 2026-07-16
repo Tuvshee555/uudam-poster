@@ -38,6 +38,20 @@ function Ed({ value = "", onChange, as = "span", className, placeholder }) {
   );
 }
 
+function DurationEd({ value, onChange }) {
+  return (
+    <Ed
+      className="dur-value"
+      value={value}
+      onChange={(v) => {
+        const clean = v.trim();
+        const numeric = Number(clean);
+        onChange(clean && Number.isFinite(numeric) ? numeric : clean);
+      }}
+    />
+  );
+}
+
 function RemoveBtn({ onClick, title = "Устгах" }) {
   return (
     <button type="button" className="editor-only removebtn" onClick={onClick} title={title}>
@@ -310,8 +324,16 @@ export default function Poster({
             <span className="head-phone-num">{(t.contacts?.phones || []).join(", ")}</span>
           </div>
           <div className="dur">
-            <div className="dur-item"><span className="dur-emoji">☀️</span>{t.duration_days} өдөр</div>
-            <div className="dur-item"><span className="dur-emoji">🌙</span>{t.duration_nights} шөнө</div>
+            <div className="dur-item">
+              <span className="dur-emoji">☀️</span>
+              <DurationEd value={t.duration_days} onChange={(v) => upd(["duration_days"], v)} />
+              <span>өдөр</span>
+            </div>
+            <div className="dur-item">
+              <span className="dur-emoji">🌙</span>
+              <DurationEd value={t.duration_nights} onChange={(v) => upd(["duration_nights"], v)} />
+              <span>шөнө</span>
+            </div>
           </div>
         </div>
 
