@@ -27,14 +27,9 @@ const TRANSPARENT_IMAGE_PLACEHOLDER =
 // the photo taller by itself.
 const TEXT_SCALE_KEY = "uudam.poster.textScale";
 const TEXT_SCALE_MIN = 0.8;
-const TEXT_SCALE_MAX = 1.5;
-const TEXT_SCALE_STEP = 0.05;
-const TEXT_SCALE_PRESETS = [
-  { label: "Жижиг", value: 0.9 },
-  { label: "Хэвийн", value: 1 },
-  { label: "Том", value: 1.2 },
-  { label: "Маш том", value: 1.4 },
-];
+const TEXT_SCALE_MAX = 2;
+const TEXT_SCALE_STEP = 0.01; // 1% — drag to any exact size, not fixed buckets
+const TEXT_SCALE_JUMPS = [1, 1.2, 1.4, 1.6];
 
 function clampTextScale(value) {
   const n = Number(value);
@@ -266,6 +261,8 @@ export default function Home() {
   // Last text size the user picked — remembered in this browser so a new poster
   // opens at their size instead of resetting to 100% every time.
   const [defaultTextScale, setDefaultTextScale] = useState(1);
+  const [textScaleDraft, setTextScaleDraft] = useState(null); // live while dragging
+  const [textScaleText, setTextScaleText] = useState(null); // raw text while typing a %
 
   // Chatbot sync modal state
   const [syncOpen, setSyncOpen] = useState(false);
@@ -283,8 +280,10 @@ export default function Home() {
   const upd = (path, value) => setTrip((t) => setPath(t, path, value));
 
   // A poster keeps the size it was saved with; anything without one uses the
-  // remembered browser default.
-  const textScale = clampTextScale(trip?.text_scale ?? defaultTextScale);
+  // remembered browser default. While the slider is being dragged the draft
+  // drives the preview, so we don't deep-clone the whole trip (photos included)
+  // on every mouse move.
+  const textScale = clampTextScale(textScaleDraft ?? trip?.text_scale ?? defaultTextScale);
 
   useEffect(() => {
     try {
@@ -293,14 +292,27 @@ export default function Home() {
     } catch {}
   }, []);
 
-  const changeTextScale = (value) => {
-    const next = clampTextScale(value);
-    setDefaultTextScale(next);
+  const rememberTextScale = (value) => {
+    setDefaultTextScale(value);
     try {
-      window.localStorage.setItem(TEXT_SCALE_KEY, String(next));
+      window.localStorage.setItem(TEXT_SCALE_KEY, String(value));
     } catch {}
+  };
+
+  // Live preview only — cheap, no trip clone.
+  const previewTextScale = (value) => setTextScaleDraft(clampTextScale(value));
+
+  // Called when the drag/typing ends: make the size stick.
+  const commitTextScale = (value = textScaleDraft) => {
+    if (value === null || value === undefined) return;
+    const next = clampTextScale(value);
+    setTextScaleDraft(null);
+    setTextScaleText(null);
+    rememberTextScale(next);
     if (trip) upd(["text_scale"], next);
   };
+
+  const nudgeTextScale = (delta) => commitTextScale(textScale + delta);
 
   const historyTitleCounts = useMemo(() => {
     const counts = new Map();
@@ -1202,8 +1214,8 @@ export default function Home() {
                   <button
                     type="button"
                     className="text-scale-step"
-                    title="Багасгах"
-                    onClick={() => changeTextScale(textScale - TEXT_SCALE_STEP)}
+                    title="1%-аар багасгах"
+                    onClick={() => nudgeTextScale(-TEXT_SCALE_STEP)}
                     disabled={textScale <= TEXT_SCALE_MIN}
                   >
                     −
@@ -1215,32 +1227,60 @@ export default function Home() {
                     max={TEXT_SCALE_MAX}
                     step={TEXT_SCALE_STEP}
                     value={textScale}
-                    onChange={(e) => changeTextScale(e.target.value)}
+                    aria-label="Бичвэрийн хэмжээ"
+                    onChange={(e) => previewTextScale(e.target.value)}
+                    onPointerUp={() => commitTextScale()}
+                    onKeyUp={() => commitTextScale()}
+                    onBlur={() => commitTextScale()}
                   />
                   <button
                     type="button"
                     className="text-scale-step"
-                    title="Томсгох"
-                    onClick={() => changeTextScale(textScale + TEXT_SCALE_STEP)}
+                    title="1%-аар томсгох"
+                    onClick={() => nudgeTextScale(TEXT_SCALE_STEP)}
                     disabled={textScale >= TEXT_SCALE_MAX}
                   >
                     +
                   </button>
-                  <span className="text-scale-val">{Math.round(textScale * 100)}%</span>
-                  <div className="text-scale-presets">
-                    {TEXT_SCALE_PRESETS.map((preset) => (
+                  <label className="text-scale-num">
+                    <input
+                      type="number"
+                      min={Math.round(TEXT_SCALE_MIN * 100)}
+                      max={Math.round(TEXT_SCALE_MAX * 100)}
+                      step={1}
+                      value={textScaleText ?? String(Math.round(textScale * 100))}
+                      onChange={(e) => {
+                        setTextScaleText(e.target.value);
+                        const pct = Number(e.target.value);
+                        if (
+                          Number.isFinite(pct) &&
+                          pct >= TEXT_SCALE_MIN * 100 &&
+                          pct <= TEXT_SCALE_MAX * 100
+                        ) {
+                          previewTextScale(pct / 100);
+                        }
+                      }}
+                      onBlur={(e) => commitTextScale(Number(e.target.value) / 100)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") e.currentTarget.blur();
+                      }}
+                    />
+                    <span>%</span>
+                  </label>
+                  <div className="text-scale-jumps">
+                    {TEXT_SCALE_JUMPS.map((value) => (
                       <button
-                        key={preset.value}
+                        key={value}
                         type="button"
-                        className={textScale === preset.value ? "active" : ""}
-                        onClick={() => changeTextScale(preset.value)}
+                        className={textScale === value ? "active" : ""}
+                        onClick={() => commitTextScale(value)}
                       >
-                        {preset.label}
+                        {Math.round(value * 100)}%
                       </button>
                     ))}
                   </div>
                   <span className="text-scale-hint">
-                    Бүх бичвэр хамт томордог. Сонгосон хэмжээ энэ постертой хамт хадгалагдаж, дараагийн шинэ постер ч мөн энэ хэмжээгээр нээгдэнэ.
+                    Гулсуурыг чирж дурын хэмжээ (жишээ нь 118%, 132%) сонгож болно · нүдэнд шууд тоо бичиж болно · ← → товчоор 1%-аар нарийн тохируулна. Сонгосон хэмжээ энэ постертой хамт хадгалагдаж, дараагийн шинэ постер ч мөн энэ хэмжээгээр нээгдэнэ.
                   </span>
                 </div>
 

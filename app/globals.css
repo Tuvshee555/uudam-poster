@@ -71,12 +71,15 @@ button,input,textarea{font:inherit}
 .text-scale-step{width:28px;height:28px;flex:none;border-radius:50%;border:1px solid #cfddeb;background:#fff;color:var(--navy);font-size:16px;font-weight:900;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
 .text-scale-step:hover:not(:disabled){border-color:var(--navy)}
 .text-scale-step:disabled{opacity:.35;cursor:default}
-.text-scale-range{flex:1;min-width:150px;max-width:280px;accent-color:var(--navy);cursor:pointer}
-.text-scale-val{min-width:52px;text-align:right;font-size:14px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}
-.text-scale-presets{display:flex;gap:6px}
-.text-scale-presets button{border:1px solid #cfddeb;background:#fff;color:var(--navy);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;cursor:pointer}
-.text-scale-presets button:hover{border-color:var(--navy)}
-.text-scale-presets button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.text-scale-range{flex:1;min-width:180px;max-width:340px;accent-color:var(--navy);cursor:pointer}
+.text-scale-num{display:inline-flex;align-items:center;gap:2px;border:1px solid #cfddeb;background:#fff;border-radius:9px;padding:4px 8px}
+.text-scale-num:focus-within{border-color:var(--navy);box-shadow:0 0 0 2px #dcebf8}
+.text-scale-num input{width:44px;border:none;outline:none;background:transparent;color:var(--navy);font-size:14px;font-weight:900;text-align:right;font-variant-numeric:tabular-nums;font-family:inherit}
+.text-scale-num span{font-size:13px;font-weight:800;color:var(--muted)}
+.text-scale-jumps{display:flex;gap:6px}
+.text-scale-jumps button{border:1px solid #cfddeb;background:#fff;color:var(--navy);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;cursor:pointer;font-variant-numeric:tabular-nums}
+.text-scale-jumps button:hover{border-color:var(--navy)}
+.text-scale-jumps button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
 .text-scale-hint{font-size:11px;color:var(--muted);flex-basis:100%}
 
 .edit-hints{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -118,12 +121,13 @@ button,input,textarea{font:inherit}
 .page{--tscale:1;width:1080px;background:#fff;padding:52px 56px 0;margin-bottom:24px}
 
 /* Header */
-.page .head{display:flex;align-items:center;gap:16px;padding-bottom:20px;border-bottom:2px solid var(--navy)}
+/* wraps instead of running past the poster edge once the text is scaled up */
+.page .head{display:flex;align-items:center;flex-wrap:wrap;gap:16px;padding-bottom:20px;border-bottom:2px solid var(--navy)}
 .page .logo{width:64px;height:64px;border-radius:12px;object-fit:cover}
 .page .name{font-size:calc(18px * var(--tscale));font-weight:900;letter-spacing:2px;color:var(--navy)}
 .page .name small{display:block;font-size:calc(10px * var(--tscale));letter-spacing:3px;color:var(--muted);font-weight:600;margin-top:3px}
 .page .spacer{flex:1}
-.page .head-phone{display:flex;align-items:center;gap:6px;color:var(--navy);font-weight:800;font-size:calc(15px * var(--tscale));margin-right:20px;white-space:nowrap}
+.page .head-phone{display:flex;align-items:center;gap:6px;color:var(--navy);font-weight:800;font-size:calc(15px * var(--tscale));margin-right:20px;white-space:normal;min-width:0;flex-shrink:1}
 .page .head-phone-ic{font-size:calc(14px * var(--tscale))}
 .page .dur{text-align:right;display:flex;flex-direction:column;gap:4px}
 .page .dur-item{color:var(--navy);font-weight:900;font-size:calc(20px * var(--tscale));display:flex;align-items:center;gap:6px;justify-content:flex-end}
@@ -140,7 +144,7 @@ button,input,textarea{font:inherit}
 .page .compact-sec{margin-top:20px}
 .page .sec h3{font-size:calc(11px * var(--tscale));letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:10px}
 .page .ptable{width:100%;border-collapse:collapse;margin-top:4px;table-layout:auto}
-.page .ptable th{text-align:left;font-size:calc(10px * var(--tscale));text-transform:uppercase;letter-spacing:.3px;color:#fff;font-weight:700;padding:9px 10px;background:var(--navy);white-space:nowrap}
+.page .ptable th{text-align:left;font-size:calc(10px * var(--tscale));text-transform:uppercase;letter-spacing:.3px;color:#fff;font-weight:700;padding:9px 10px;background:var(--navy);white-space:normal}
 .page .ptable th:first-child{border-radius:8px 0 0 0}
 .page .ptable th:last-child{border-radius:0 8px 0 0}
 .page .ptable td{padding:10px 10px;border-bottom:1px solid var(--line);font-size:calc(13px * var(--tscale));vertical-align:top;white-space:nowrap}
