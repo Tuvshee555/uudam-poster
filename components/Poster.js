@@ -294,6 +294,7 @@ export default function Poster({
   removePriceCol,
   logoSrc,
   page1Ref,
+  textScale = 1,
   onDayPhotoFile,
   dayPhotoInputRefs,
   activeDayPhotoIndex,
@@ -315,7 +316,7 @@ export default function Poster({
 
   return (
     <>
-      <div className="page" id="p1" ref={page1Ref}>
+      <div className="page" id="p1" ref={page1Ref} style={{ "--tscale": textScale }}>
         <div className="head">
           <Logo />
           <div className="spacer" />

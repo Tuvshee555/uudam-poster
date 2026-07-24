@@ -22,6 +22,26 @@ const DIRECT_UPLOAD_LIMIT_BYTES = 4 * 1024 * 1024;
 const TRANSPARENT_IMAGE_PLACEHOLDER =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 
+// Poster text size. One multiplier scales every text on the poster; photos are
+// not touched — a day photo fills its column's full height, so bigger text makes
+// the photo taller by itself.
+const TEXT_SCALE_KEY = "uudam.poster.textScale";
+const TEXT_SCALE_MIN = 0.8;
+const TEXT_SCALE_MAX = 1.5;
+const TEXT_SCALE_STEP = 0.05;
+const TEXT_SCALE_PRESETS = [
+  { label: "Жижиг", value: 0.9 },
+  { label: "Хэвийн", value: 1 },
+  { label: "Том", value: 1.2 },
+  { label: "Маш том", value: 1.4 },
+];
+
+function clampTextScale(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(TEXT_SCALE_MAX, Math.max(TEXT_SCALE_MIN, Math.round(n * 100) / 100));
+}
+
 const EXTRACT_TIMEOUT_MS = 90_000; // server maxDuration is 60s; give network slack then give up
 
 // If the Vercel function times out mid-request, the connection can hang instead of
@@ -243,6 +263,9 @@ export default function Home() {
   const [scale, setScale] = useState(0.6);
   const [totalH, setTotalH] = useState(0);
   const [activeDayPhotoIndex, setActiveDayPhotoIndex] = useState(null);
+  // Last text size the user picked — remembered in this browser so a new poster
+  // opens at their size instead of resetting to 100% every time.
+  const [defaultTextScale, setDefaultTextScale] = useState(1);
 
   // Chatbot sync modal state
   const [syncOpen, setSyncOpen] = useState(false);
@@ -258,6 +281,26 @@ export default function Home() {
   const dayPhotoInputRefs = useRef({});
 
   const upd = (path, value) => setTrip((t) => setPath(t, path, value));
+
+  // A poster keeps the size it was saved with; anything without one uses the
+  // remembered browser default.
+  const textScale = clampTextScale(trip?.text_scale ?? defaultTextScale);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(TEXT_SCALE_KEY);
+      if (stored !== null) setDefaultTextScale(clampTextScale(stored));
+    } catch {}
+  }, []);
+
+  const changeTextScale = (value) => {
+    const next = clampTextScale(value);
+    setDefaultTextScale(next);
+    try {
+      window.localStorage.setItem(TEXT_SCALE_KEY, String(next));
+    } catch {}
+    if (trip) upd(["text_scale"], next);
+  };
 
   const historyTitleCounts = useMemo(() => {
     const counts = new Map();
@@ -432,7 +475,7 @@ export default function Home() {
 
   useLayoutEffect(() => {
     if (previewRef.current) setTotalH(previewRef.current.scrollHeight);
-  }, [trip, scale]);
+  }, [trip, scale, textScale]);
 
   const loadHistory = async () => {
     // Never throw — a failed history refresh must not break the upload flow
@@ -1016,7 +1059,7 @@ export default function Home() {
     setError("");
     setBusy("Хадгалж байна…");
     try {
-      const cleanTrip = normalizeTripData(trip);
+      const cleanTrip = { ...normalizeTripData(trip), text_scale: textScale };
       const matchingTitles = history.filter((item) => {
         if (item.id === tripId) return false;
         return normalizeHistoryTitle(item.title) === normalizeHistoryTitle(cleanTrip.title);
@@ -1154,6 +1197,53 @@ export default function Home() {
                   <button type="button" onClick={addPriceCol} disabled={!trip.price_table}>+ Үнэ багана</button>
                 </div>
 
+                <div className="text-scale">
+                  <span className="text-scale-title">Бичвэрийн хэмжээ</span>
+                  <button
+                    type="button"
+                    className="text-scale-step"
+                    title="Багасгах"
+                    onClick={() => changeTextScale(textScale - TEXT_SCALE_STEP)}
+                    disabled={textScale <= TEXT_SCALE_MIN}
+                  >
+                    −
+                  </button>
+                  <input
+                    className="text-scale-range"
+                    type="range"
+                    min={TEXT_SCALE_MIN}
+                    max={TEXT_SCALE_MAX}
+                    step={TEXT_SCALE_STEP}
+                    value={textScale}
+                    onChange={(e) => changeTextScale(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="text-scale-step"
+                    title="Томсгох"
+                    onClick={() => changeTextScale(textScale + TEXT_SCALE_STEP)}
+                    disabled={textScale >= TEXT_SCALE_MAX}
+                  >
+                    +
+                  </button>
+                  <span className="text-scale-val">{Math.round(textScale * 100)}%</span>
+                  <div className="text-scale-presets">
+                    {TEXT_SCALE_PRESETS.map((preset) => (
+                      <button
+                        key={preset.value}
+                        type="button"
+                        className={textScale === preset.value ? "active" : ""}
+                        onClick={() => changeTextScale(preset.value)}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                  <span className="text-scale-hint">
+                    Бүх бичвэр хамт томордог. Сонгосон хэмжээ энэ постертой хамт хадгалагдаж, дараагийн шинэ постер ч мөн энэ хэмжээгээр нээгдэнэ.
+                  </span>
+                </div>
+
                 <div className="edit-hints">
                   <span>Canvas маягаар: постер дээрх бичвэр дээр шууд дарж засна.</span>
                   <span>Зураг: нүүр зураг toolbar-аас, өдрийн зураг тухайн зурагны box дээр дарж орно.</span>
@@ -1191,6 +1281,7 @@ export default function Home() {
                     removePriceCol={removePriceCol}
                     logoSrc="/uudam-logo.jpg"
                     page1Ref={page1Ref}
+                    textScale={textScale}
                     onDayPhotoFile={onDayPhotoFile}
                     dayPhotoInputRefs={dayPhotoInputRefs}
                     activeDayPhotoIndex={activeDayPhotoIndex}
